@@ -46,7 +46,7 @@ function plugin_autoinstall_staticpages($pi_name)
 {
     $pi_name         = 'staticpages';
     $pi_display_name = 'Static Pages';
-    $pi_admin        = $pi_display_name . ' Admin';
+    $pi_admin        = 'Static Page Admin'; // "Page"(!), not "Pages"
 
     $info = array(
         'pi_name'         => $pi_name,
