@@ -8,7 +8,7 @@
 // |                                                                           |
 // | Story-related functions needed in more than one place.                    |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2000-2009 by the following authors:                         |
+// | Copyright (C) 2000-2010 by the following authors:                         |
 // |                                                                           |
 // | Authors: Tony Bibbs        - tony AT tonybibbs DOT com                    |
 // |          Mark Limburg      - mlimburg AT users DOT sourceforge DOT net    |
@@ -101,9 +101,9 @@ function STORY_renderArticle( &$story, $index='', $storytpl='storytext.thtml', $
             ));
 
     $article->set_var( 'xhtml', XHTML );
-    $article->set_var( 'layout_url', $_CONF['layout_url'] );
     $article->set_var( 'site_url', $_CONF['site_url'] );
     $article->set_var( 'site_admin_url', $_CONF['site_admin_url'] );
+    $article->set_var( 'layout_url', $_CONF['layout_url'] );
     $article->set_var( 'site_name', $_CONF['site_name'] );
     $article->set_var( 'story_date', $story->DisplayElements('date') );
     $article->set_var( 'story_date_short', $story->DisplayElements('shortdate') );
@@ -325,7 +325,7 @@ function STORY_renderArticle( &$story, $index='', $storytpl='storytext.thtml', $
         {
             $article->set_var( 'lang_readmore', $LANG01[2] );
             $article->set_var( 'lang_readmore_words', $LANG01[62] );
-            $numwords = COM_numberFormat (sizeof( explode( ' ', strip_tags( $bodytext ))));
+            $numwords = COM_numberFormat(count(explode(' ', COM_getTextContent($bodytext))));
             $article->set_var( 'readmore_words', $numwords );
 
             $article->set_var( 'readmore_link',
@@ -444,7 +444,7 @@ function STORY_renderArticle( &$story, $index='', $storytpl='storytext.thtml', $
         }
 
         if(( $_CONF['hideemailicon'] == 1 ) ||
-           ( empty( $_USER['username'] ) &&
+           ( COM_isAnonUser() &&
                 (( $_CONF['loginrequired'] == 1 ) ||
                  ( $_CONF['emailstoryloginrequired'] == 1 ))))
         {
@@ -585,7 +585,7 @@ function STORY_extractLinks( $fulltext, $maxlength = 26 )
 
 function STORY_whatsRelated( $related, $uid, $tid )
 {
-    global $_CONF, $_TABLES, $_USER, $LANG24;
+    global $_CONF, $_TABLES, $LANG24;
 
     // get the links from the story text
     if (!empty ($related)) {
@@ -594,7 +594,7 @@ function STORY_whatsRelated( $related, $uid, $tid )
         $rel = array ();
     }
 
-    if( !empty( $_USER['username'] ) || (( $_CONF['loginrequired'] == 0 ) &&
+    if( !COM_isAnonUser() || (( $_CONF['loginrequired'] == 0 ) &&
            ( $_CONF['searchloginrequired'] == 0 ))) {
         // add a link to "search by author"
         if( $_CONF['contributedbyline'] == 1 )
@@ -611,7 +611,7 @@ function STORY_whatsRelated( $related, $uid, $tid )
     }
 
     $related = '';
-    if( sizeof( $rel ) > 0 )
+    if( count( $rel ) > 0 )
     {
         $related = COM_checkWords( COM_makeList( $rel, 'list-whats-related' ));
     }
@@ -717,10 +717,9 @@ function STORY_getItemInfo($sid, $what, $uid = 0, $options = array())
             $fields[] = 'title';
             break;
         case 'url':
-            if ($sid == '*') {
-                // in this case, we need the sid to build the URL
-                $fields[] = 'sid';
-            }
+            // needed for $sid == '*', but also in case we're only requesting
+            // the URL (so that $fields isn't emtpy)
+            $fields[] = 'sid';
             break;
         default:
             // nothing to do
@@ -877,7 +876,9 @@ function STORY_deleteStory($sid)
 */
 function STORY_doDeleteThisStoryNow($sid)
 {
-    global $_TABLES;
+    global $_CONF, $_TABLES;
+
+    require_once $_CONF['path_system'] . 'lib-comment.php';
 
     STORY_deleteImages($sid);
     DB_delete($_TABLES['comments'], array('sid', 'type'),
@@ -892,6 +893,7 @@ function STORY_doDeleteThisStoryNow($sid)
     // update RSS feed and Older Stories block
     COM_rdfUpToDateCheck();
     COM_olderStuff();
+    CMT_updateCommentcodes();
 }
 
 /**
@@ -928,6 +930,8 @@ function service_submit_story($args, &$output, &$svc_msg)
 
         return PLG_RET_AUTH_FAILED;
     }
+
+    require_once $_CONF['path_system'] . 'lib-comment.php';
 
     $gl_edit = false;
     if (isset($args['gl_edit'])) {
@@ -1288,7 +1292,8 @@ function service_submit_story($args, &$output, &$svc_msg)
 
         // update feed(s) and Older Stories block
         COM_rdfUpToDateCheck('article', $story->DisplayElements('tid'), $sid);
-        COM_olderStuff ();
+        COM_olderStuff();
+        CMT_updateCommentcodes();
 
         if ($story->type == 'submission') {
             $output = COM_refresh ($_CONF['site_admin_url'] . '/moderation.php?msg=9');
@@ -1485,7 +1490,7 @@ function service_get_story($args, &$output, &$svc_msg)
         $sql['mssql'] =
             "SELECT STRAIGHT_JOIN s.sid, s.uid, s.draft_flag, s.tid, s.date, s.title, CAST(s.introtext AS text) AS introtext, CAST(s.bodytext AS text) AS bodytext, s.hits, s.numemails, s.comments, s.trackbacks, s.related, s.featured, s.show_topic_icon, s.commentcode, s.trackbackcode, s.statuscode, s.expire, s.postmode, s.frontpage, s.owner_id, s.group_id, s.perm_owner, s.perm_group, s.perm_members, s.perm_anon, s.advanced_editor_mode, " . " UNIX_TIMESTAMP(s.date) AS unixdate, UNIX_TIMESTAMP(s.expire) as expireunix, " . "u.username, u.fullname, u.photo, u.email, t.topic, t.imageurl " . "FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u, {$_TABLES['topics']} AS t " . "WHERE (s.uid = u.uid) AND (s.tid = t.tid)" . COM_getPermSQL('AND', $_USER['uid'], 2, 's') . $order . $limit;
 
-        $sql['pgsql'] = "SELECT  s.*, date_part('epoch', s.date) AS unixdate, date_part('epoch', s.expire) as expireunix, u.username, u.fullname, u.photo, u.email, t.topic, t.imageurl  FROM stories s, users u, topics t WHERE (s.uid = u.uid) AND (s.tid = t.tid) FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u, {$_TABLES['topics']} AS t WHERE (s.uid = u.uid) AND (s.tid = t.tid)" . COM_getPermSQL('AND', $_USER['uid'], 2, 's') . $order . $limit_pgsql;
+        $sql['pgsql'] = "SELECT  s.*, UNIX_TIMESTAMP(s.date) AS unixdate, UNIX_TIMESTAMP(s.expire) as expireunix, u.username, u.fullname, u.photo, u.email, t.topic, t.imageurl  FROM stories s, users u, topics t WHERE (s.uid = u.uid) AND (s.tid = t.tid) FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u, {$_TABLES['topics']} AS t WHERE (s.uid = u.uid) AND (s.tid = t.tid)" . COM_getPermSQL('AND', $_USER['uid'], 2, 's') . $order . $limit_pgsql;
         $result = DB_query($sql);
 
         $count = 0;
