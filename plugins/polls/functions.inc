@@ -77,13 +77,13 @@ if (!isset($_PO_CONF['pollsloginrequired'])) {
 * NOTE: this MUST return the url/value pairs in the following format
 * $<arrayname>[<label>] = <url>
 *
-* @return   mixed   menu entry, or boolean false if disabled / hidden
 */
 function plugin_getmenuitems_polls ()
 {
-    global $_CONF, $_PO_CONF, $LANG_POLLS;
+    global $_CONF, $_USER, $_PO_CONF, $LANG_POLLS;
 
-    if (($_PO_CONF['hidepollsmenu'] == 1) || (COM_isAnonUser() &&
+    $anon = (empty ($_USER['uid']) || ($_USER['uid'] <= 1)) ? true : false;
+    if (($_PO_CONF['hidepollsmenu'] == 1) || ($anon &&
                 ($_CONF['loginrequired'] || $_PO_CONF['pollsloginrequired']))) {
         return false;
     }
@@ -96,6 +96,7 @@ function plugin_getmenuitems_polls ()
 /**
  * Poll saves a comment
  *
+ * @param   string  $type   Plugin to save comment
  * @param   string  $title  comment title
  * @param   string  $comment comment text
  * @param   string  $id     Item id to which $cid belongs
@@ -109,26 +110,21 @@ function plugin_savecomment_polls($title, $comment, $id, $pid, $postmode)
 
     $retval = '';
 
-    $commentcode = DB_getItem($_TABLES['polltopics'], 'commentcode',
-                              "pid = '$id'");
+    $commentcode = DB_getItem ($_TABLES['polltopics'], 'commentcode',
+                               "pid = '$id'");
     if ($commentcode != 0) {
-        return COM_refresh($_CONF['site_url'] . '/index.php');
+        return COM_refresh ($_CONF['site_url'] . '/index.php');
     }
 
-    $ret = CMT_saveComment($title, $comment, $id, $pid, 'polls', $postmode);
+    $ret = CMT_saveComment ($title, $comment, $id, $pid, 'polls', $postmode);
     if ($ret > 0) { // failure //FIXME: some failures should not return to comment form
         $retval .= COM_siteHeader('menu', $LANG03[1])
-                . CMT_commentForm($title, $comment, $id, $pid, 'polls',
-                                  $LANG03[14], $postmode)
+                . CMT_commentForm ($title, $comment, $id, $pid, 'polls',
+                                   $LANG03[14], $postmode)
                 . COM_siteFooter();
     } else { // success
-        $msg = '';
-        if (($_CONF['commentsubmission'] == 1) &&
-                !SEC_hasRights('comment.submit')) {
-            $msg = '&msg=15';
-        }
-        $retval = COM_refresh($_CONF['site_url']
-                              . "/polls/index.php?pid=$id&amp;aid=-1$msg");
+        $retval = COM_refresh ($_CONF['site_url']
+                                . "/polls/index.php?pid=$id&amp;aid=-1");
     }
 
     return $retval;
@@ -730,7 +726,7 @@ function POLLS_pollsave($pid, $aid)
     }
 
     // This always does an insert so no need to provide key_field and key_value args
-    DB_save($_TABLES['pollvoters'],'ipaddress,date,pid',"'{$_SERVER['REMOTE_ADDR']}'," . time() . ",'$pid'");
+    DB_query("INSERT INTO {$_TABLES['pollvoters']} (ipaddress,date,pid) VALUES ('{$_SERVER['REMOTE_ADDR']}'," . time() . ",'$pid')");
     $retval .= COM_startBlock ($LANG_POLLS['savedvotetitle'], '',
                        COM_getBlockTemplate ('_msg_block', 'header'))
         . $LANG_POLLS['savedvotemsg'] . ' "'
@@ -1254,9 +1250,10 @@ function plugin_getiteminfo_polls($pid, $what, $uid = 0, $options = array())
             $fields[] = 'topic';
             break;
         case 'url':
-            // needed for $pid == '*', but also in case we're only requesting
-            // the URL (so that $fields isn't emtpy)
-            $fields[] = 'pid';
+            if ($pid == '*') {
+                // in this case, we need the pid to build the URL
+                $fields[] = 'pid';
+            }
             break;
         default:
             // nothing to do

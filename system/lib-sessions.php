@@ -279,7 +279,7 @@ function SESS_newSession($userid, $remote_ip, $lifespan, $md5_based=0)
     $result = DB_query($sql);
     if ($result) {
         if ($_CONF['lastlogin'] == true) {
-            // Update userinfo record to record the date and time as lastlogin
+            // Update userinfo record to record the date and time as lastlogin 
             DB_query("UPDATE {$_TABLES['userinfo']} SET lastlogin = UNIX_TIMESTAMP() WHERE uid=$userid");
         }
         if ($_SESS_VERBOSE) COM_errorLog("Assigned the following session id: $sessid",1);

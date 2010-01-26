@@ -74,13 +74,13 @@ if (!isset($_CA_CONF['calendarloginrequired'])) {
 * NOTE: this MUST return the url/value pairs in the following format
 * $<arrayname>[<label>] = <url>
 *
-* @return   mixed   menu entry, or boolean false if disabled / hidden
 */
-function plugin_getmenuitems_calendar()
+function plugin_getmenuitems_calendar ()
 {
-    global $_CONF, $_CA_CONF, $LANG_CAL_1;
+    global $_CONF, $_USER, $_CA_CONF, $LANG_CAL_1;
 
-    if (($_CA_CONF['hidecalendarmenu'] == 1) || (COM_isAnonUser() &&
+    $anon = (empty ($_USER['uid']) || ($_USER['uid'] <= 1)) ? true : false;
+    if (($_CA_CONF['hidecalendarmenu'] == 1) || ($anon &&
             ($_CONF['loginrequired'] || $_CA_CONF['calendarloginrequired']))) {
         return false;
     }
@@ -119,13 +119,16 @@ function phpblock_calendar( $help='', $title='' )
             $title = DB_getItem( $_TABLES['blocks'], 'title',
                                  "name = 'events_block'" );
         }
-
         $eventSql = 'SELECT eid,title,url,datestart,dateend,group_id,owner_id,perm_owner,perm_group,perm_members,perm_anon '
         . "FROM {$_TABLES['events']} ";
         if($_DB_dbms == 'mssql') {
             $eventSql .= "WHERE dateend >= DATEADD(hh, 24, NOW()) AND (TO_DAYS(datestart) - TO_DAYS(NOW()) < $range) ";
-        } else {
-            $eventSql .= "WHERE dateend >= (NOW() - INTERVAL 24 HOUR) AND (TO_DAYS(datestart) - TO_DAYS(NOW()) < $range) ";
+        } else if($_DB_dbms =='pgsql')
+        {
+            $eventSql .= "WHERE dateend >= (NOW() - INTERVAL '1 day') AND (NOW() - INTERVAL '$range days') < datestart ";   
+        } 
+        else {
+            $eventSql .= "WHERE dateend >= (NOW() - INTERVAL 24 HOUR) AND (TO_DAYS(datestart) - TO_DAYS(NOW()) < $range) ";            
         }
         $eventSql .= 'ORDER BY datestart,timestart';
 
@@ -134,7 +137,12 @@ function phpblock_calendar( $help='', $title='' )
             . "FROM {$_TABLES['personal_events']} ";
             if($_DB_dbms == 'mssql') {
                 $personaleventsql .= "WHERE uid = {$_USER['uid']} AND dateend >= DATEADD(hh, 24, getUTCDate())  AND (TO_DAYS(datestart) - TO_DAYS(NOW()) < $range) ";
-            } else {
+            }
+            else if($_DB_dbms=='pgsql')
+            {
+                $personaleventsql .= "WHERE uid = {$_USER['uid']} AND dateend >= (NOW() - INTERVAL '1 day')  AND (NOW() - INTERVAL '$range days') < datestart ";
+            }
+             else {
                 $personaleventsql .= "WHERE uid = {$_USER['uid']} AND dateend >= (NOW() - INTERVAL 24 HOUR)  AND (TO_DAYS(datestart) - TO_DAYS(NOW()) < $range) ";
             }
             $personaleventsql .= 'ORDER BY datestart, dateend';
@@ -1860,9 +1868,10 @@ function plugin_getiteminfo_calendar($eid, $what, $uid = 0, $options = array())
             $fields[] = 'title';
             break;
         case 'url':
-            // needed for $eid == '*', but also in case we're only requesting
-            // the URL (so that $fields isn't emtpy)
-            $fields[] = 'eid';
+            if ($eid == '*') {
+                // in this case, we need the eid to build the URL
+                $fields[] = 'eid';
+            }
             break;
         default:
             // nothing to do

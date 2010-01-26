@@ -222,7 +222,7 @@ function CMT_getComment( &$comments, $mode, $type, $order, $delete_option = fals
 
     $template = new Template( $_CONF['path_layout'] . 'comment' );
     $template->set_file( array( 'comment' => 'comment.thtml',
-                                'thread'  => 'thread.thtml'  ));
+                               'thread'  => 'thread.thtml'  ));
 
     // generic template variables
     $template->set_var( 'xhtml', XHTML );
@@ -548,7 +548,9 @@ function CMT_getComment( &$comments, $mode, $type, $order, $delete_option = fals
             $retval .= $template->parse( 'output', 'comment' );
         }
         $row++;
-    } while( $A = DB_fetchArray( $comments ));
+    } while( !$preview && ($A = DB_fetchArray( $comments )));
+    
+
 
     return $retval;
 }
@@ -1108,17 +1110,14 @@ function CMT_saveComment($title, $comment, $sid, $pid, $type, $postmode)
         COM_errorLog("CMT_saveComment: $uid from {$_SERVER['REMOTE_ADDR']} tried "
                    . 'to submit a comment with invalid $title and/or $comment.');
         $ret = 5;
-    } elseif (($_CONF['commentsubmission'] == 1) &&
-            !SEC_hasRights('comment.submit')) {
-        // comment into comment submission table enabled
+    } elseif ( $_CONF['commentsubmission'] == 1 && !SEC_hasRights('comment.submit') ) {
+        //comment into comment submission table enabled
         if (isset($name)) {
-            DB_save($_TABLES['commentsubmissions'],
-                    'sid,uid,name,comment,date,title,pid,ipaddress,type',
-                    "'$sid',$uid,'$name','$comment',NOW(),'$title',$pid,'{$_SERVER['REMOTE_ADDR']}','$type'");
+            DB_query ( "INSERT INTO {$_TABLES['commentsubmissions']} (sid,uid,name,comment,date,title,pid,ipaddress) VALUES
+                ($sid',$uid,'$name','$comment',now(),'$title',$pid,'{$_SERVER['REMOTE_ADDR']}')");
         } else {
-            DB_save($_TABLES['commentsubmissions'],
-                    'sid,uid,comment,date,title,pid,ipaddress,type',
-                    "'$sid',$uid,'$comment',NOW(),'$title',$pid,'{$_SERVER['REMOTE_ADDR']}','$type'");
+            DB_query ( "INSERT INTO {$_TABLES['commentsubmissions']} (sid,uid,comment,date,title,pid,ipaddress) VALUES
+                ($sid',$uid,$comment',now(),'$title',$pid,'{$_SERVER['REMOTE_ADDR']}')");
         }
 
         $ret = -1; // comment queued
@@ -1129,16 +1128,18 @@ function CMT_saveComment($title, $comment, $sid, $pid, $type, $postmode)
                          . "AND sid = '$sid'");
         list($rht, $indent) = DB_fetchArray($result);
         if ( !DB_error() ) {
+            $rht2=$rht+1;
+            $indent+=1;
             DB_query("UPDATE {$_TABLES['comments']} SET lft = lft + 2 "
                    . "WHERE sid = '$sid' AND type = '$type' AND lft >= $rht");
             DB_query("UPDATE {$_TABLES['comments']} SET rht = rht + 2 "
                    . "WHERE sid = '$sid' AND type = '$type' AND rht >= $rht");
             if (isset($name)) {
                 DB_save ($_TABLES['comments'], 'sid,uid,comment,date,title,pid,lft,rht,indent,type,ipaddress,name',
-             "'$sid',$uid,'$comment',now(),'$title',$pid,$rht,$rht+1,$indent+1,'$type','{$_SERVER['REMOTE_ADDR']}','$name'");
+             "'$sid',$uid,'$comment',now(),'$title',$pid,$rht,$rht2,$indent,'$type','{$_SERVER['REMOTE_ADDR']}','$name'");
             } else {
                 DB_save ($_TABLES['comments'], 'sid,uid,comment,date,title,pid,lft,rht,indent,type,ipaddress',
-             "'$sid',$uid,'$comment',now(),'$title',$pid,$rht,$rht+1,$indent+1,'$type','{$_SERVER['REMOTE_ADDR']}'");
+             "'$sid',$uid,'$comment',now(),'$title',$pid,$rht,$rht2,$indent,'$type','{$_SERVER['REMOTE_ADDR']}'");
             }
             
         } else { //replying to non-existent comment or comment in wrong article
@@ -1147,25 +1148,27 @@ function CMT_saveComment($title, $comment, $sid, $pid, $type, $postmode)
             $ret = 4; // Cannot return here, tables locked!
         }
     } else {
+        $rht2=$rht+1;
+        $rht3=$rht+2;
         $rht = DB_getItem($_TABLES['comments'], 'MAX(rht)', "sid = '$sid'");
         if ( DB_error() ) {
             $rht = 0;
         }
         if (isset($name)) {
             DB_save ($_TABLES['comments'], 'sid,uid,comment,date,title,pid,lft,rht,indent,type,ipaddress,name',
-                "'$sid',$uid,'$comment',now(),'$title',$pid,$rht+1,$rht+2,0,'$type','{$_SERVER['REMOTE_ADDR']}','$name'");
+                "'$sid',$uid,'$comment',now(),'$title',$pid,$rht2,$rht3,0,'$type','{$_SERVER['REMOTE_ADDR']}','$name'");
         } else {
             $rht = DB_getItem($_TABLES['comments'], 'MAX(rht)', "sid = '$sid'");
             if ( DB_error() ) {
                 $rht = 0;
             }
             DB_save ($_TABLES['comments'], 'sid,uid,comment,date,title,pid,lft,rht,indent,type,ipaddress',
-                "'$sid',$uid,'$comment',now(),'$title',$pid,$rht+1,$rht+2,0,'$type','{$_SERVER['REMOTE_ADDR']}'");
+                "'$sid',$uid,'$comment',now(),'$title',$pid,$rht2,$rht3,0,'$type','{$_SERVER['REMOTE_ADDR']}'");
         }
         
     }
 
-    $cid = DB_insertId();
+    $cid = DB_insertId('',$_TABLES['comments'].'_cid_seq');
     DB_unlockTable($_TABLES['comments']);
 
     // notify of new comment 
@@ -1695,6 +1698,7 @@ function CMT_rebuildTree($sid, $pid = 0, $left = 0)
 /**
  * Moves comment from submission table to comments table
  * 
+ * @param   int   cid  comment id
  * @copyright Jared Wenerd 2008
  * @author Jared Wenerd, wenerd87 AT gmail DOT com
  * @param  string $cid comment id
@@ -1730,7 +1734,7 @@ function CMT_approveModeration($cid)
                         "'{$A['type']}','{$A['sid']}','{$A['date']}','{$A['title']}','{$A['comment']}','{$A['uid']}',".
                         "'{$A['pid']}','{$A['ipaddress']}',$indent");
     }
-    $newcid = DB_insertId();
+    $newcid = DB_insertId('','comments_cid_seq');
 
     DB_delete($_TABLES['commentsubmissions'], 'cid', $cid);
 

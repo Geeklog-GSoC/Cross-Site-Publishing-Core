@@ -86,6 +86,9 @@ function INST_installEngine($install_type, $install_step)
                 case 'mssql':
                     $db_selected = 'mssql';
                     break;
+                case 'pgsql':
+                    $pgsql_selected = 'pgsql';
+                    break;
                 default:
                     $db_selected = 'mysql';
                     break;
@@ -94,6 +97,9 @@ function INST_installEngine($install_type, $install_step)
             switch ($_DB_dbms) {
                 case 'mssql':
                     $db_selected = 'mssql';
+                    break;
+                case 'pgsql':
+                    $pgsql_selected = 'pgsql';
                     break;
                 default:
                     $db_selected = 'mysql';
@@ -219,7 +225,6 @@ function INST_installEngine($install_type, $install_step)
 
         // Check if we can connect to the database
         } else if (!INST_dbConnect($DB)) { 
-
             $display .= '<h2>' . $LANG_INSTALL[54] . '</h2><p>'
                      . $LANG_INSTALL[55] . '</p>'
                      . INST_showReturnFormData($_POST) . LB;
@@ -412,6 +417,35 @@ function INST_installEngine($install_type, $install_step)
                 require_once $dbconfig_path;
                 require_once $siteconfig_path;
                 require_once $_CONF['path_system'] . 'lib-database.php';
+                
+                if($_DB_dbms=='pgsql')
+                {
+                    //Create a func to check if plpgsql is already installed
+                    DB_query("CREATE OR REPLACE FUNCTION make_plpgsql() 
+                    RETURNS VOID LANGUAGE SQL AS $$
+                    CREATE LANGUAGE plpgsql;
+                    $$;
+                    SELECT
+                        CASE
+                        WHEN EXISTS( SELECT 1 FROM pg_catalog.pg_language WHERE lanname='plpgsql')
+                        THEN NULL
+                        ELSE make_plpgsql() END;");
+                    //Create a function to check if table exists
+                    DB_query("CREATE OR REPLACE FUNCTION check_table(varchar, varchar) 
+                        RETURNS boolean AS $$ 
+                         DECLARE 
+                           v_cnt integer; 
+                           v_tbl boolean; 
+                         BEGIN 
+                           SELECT count(1) INTO v_cnt FROM pg_tables where tablename = $1 and 
+                        schemaname = $2; 
+                            IF v_cnt > 0 THEN 
+                             v_tbl = 'true'; 
+                            END IF; 
+                        return v_tbl; 
+                        END; 
+                        $$ LANGUAGE 'plpgsql'");
+                }
 
                 // Check if GL is already installed
                 if (INST_checkTableExists('vars')) {
@@ -768,6 +802,12 @@ function INST_createDatabaseStructures()
         }
         break;
 
+    case 'pgsql':
+        foreach ($_SQL as $sql) {
+            $_DB->dbQuery($sql, 0, 1);
+        }
+        break;
+
     default:
         die("Unknown DB type '$_DB_dbms'");
         break;
@@ -794,7 +834,7 @@ function INST_personalizeAdminAccount($site_mail, $site_url)
 {
     global $_TABLES, $_DB_dbms;
 
-    if (($_DB_dbms == 'mysql') || ($_DB_dbms == 'mssql')) {
+    if (($_DB_dbms == 'mysql') || ($_DB_dbms == 'mssql') || ($_DB_dbms== 'pgsql')) {
 
         // let's try and personalize the Admin account a bit ...
 

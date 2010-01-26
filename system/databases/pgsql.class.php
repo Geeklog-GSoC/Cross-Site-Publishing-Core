@@ -99,8 +99,8 @@ class DataBase
     }
     
     /**
-    * Creates a connection string, the way pgSQL likes it
-    * Doesn't show the port because it isnt being provided in class default assumed'
+    * Creates a connection string for pg_connect
+    * Doesn't show the port because it isnt being provided in class default assumed
     * 
     */
     function buildString()
@@ -151,11 +151,9 @@ class DataBase
             }
         }
 
-        if ($this->_pgsql_version >= 7.4) {
-            if ($this->_charset == 'utf-8') {
-                pg_query($this->_db,"SET NAMES 'UTF8'"); //only pgsql > 7.4 supports utf8
-            }
-        }
+         if ($this->_pgsql_version >= 7.4 && $this->_charset == 'utf-8') {
+                    pg_query($this->_db,"SET NAMES 'UTF8'");
+                }
 
         if ($this->isVerbose()) {
             $this->_errorlog("\n***leaving database->_connect***");
@@ -249,9 +247,10 @@ class DataBase
         if ($both) {
             $result_type = PGSQL_BOTH;
         } else {
-            $result_type = PGSQL_ASSOC;
+            $result_type = PGSQL_ASSOC;                     
         }
-        return @pg_fetch_array($recordset, $result_type);
+        return pg_fetch_array($recordset, NULL, $result_type);
+        
     }
     
     /**
@@ -341,12 +340,17 @@ class DataBase
             $this->_errorlog("\n***inside database->dbQuery***");
             $this->_errorlog("\n*** sql to execute is $sql ***");
         }
-
+        /* Replace some non ANSI keywords */
+        if(preg_match('#LIMIT ([0-9]+),([\\s])?([0-9]+)#',$sql,$matches))
+        {
+            $sql = str_replace($matches[0],'LIMIT '.$matches[3].' OFFSET '.$matches[1],$sql); 
+        }
         // Run query
         if ($ignore_errors == 1) {
-            $result = @pg_query($this->_db,$sql);
+
+            $result = pg_query($this->_db,$sql);
         } else {
-            $result = @pg_query($this->_db,$sql) or trigger_error($this->dbError($sql), E_USER_ERROR);
+            $result = pg_query($this->_db,$sql) or trigger_error($this->dbError($sql), E_USER_ERROR);
         }
 
         // If OK, return otherwise echo error
@@ -384,48 +388,77 @@ class DataBase
         if ($this->isVerbose()) {
             $this->_errorlog("\n*** Inside database->dbSave ***");
         }
-        $sql ='SELECT COUNT(*) FROM '.$table;
+        $sql = "SELECT COUNT(*) FROM $table";
         $result = $this->dbQuery($sql);
         $row = pg_fetch_row($result);
-        if($row[0]==0)
+        if($row[0]==0) //nothing in the table yet
         {
-           $sql='INSERT INTO '.$table.'('.$fields.') VALUES('.$values.')'; 
+            $sql="INSERT INTO $table($fields) VALUES($values)";  
         }
         else
         {
-            if(count($fields)==count($values))
+            unset($row); unset($result);
+            $fields_array = explode(',',$fields);
+            $values_array = explode(',',$values);
+            $row = array();              
+            $sql = 'SELECT pg_attribute.attname FROM pg_index, pg_class, pg_attribute 
+                    WHERE pg_class.oid = \''.$table.'\'::regclass AND 
+                    indrelid = pg_class.oid AND
+                    pg_attribute.attrelid = pg_class.oid AND 
+                    pg_attribute.attnum = any(pg_index.indkey)
+                    GROUP BY pg_attribute.attname, pg_attribute.attnum;';
+      
+            $result = $this->dbQuery($sql);
+            while($fetched = pg_fetch_row($result))
             {
-                $things='';
-                $counter = count($fields);
-                for($i=0;$i<$counter;$i++)
-                {
-                    if(($i+1)==$counter)
-                    {
-                        $things.=$fields[$x].'='.$values[$x];
-                    }
-                    else
-                    {
-                        $things.=$fields[$x].'='.$values[$x].', ';   
-                    }  
-                }
-                $sql='UPDATE '.$table.' SET '.$things;
+             $row[] = $fetched;   
             }
-            else
+            $counter=count($row);
+            if(!empty($row[0]))
             {
-                if ($this->isVerbose()) {
-                $this->_errorlog("\n*** Field count doesnt match value count ***");
-                }   
-            }  
+                $key = array_search($row[0][0],$fields_array);
+                if($key!==FALSE) //$fields contains the primary key already
+                {
+                 $sql = "DELETE FROM $table WHERE {$row[0][0]}='{$values_array[$key]}'";
+                 $result = $this->dbQuery($sql);
+                }
+                elseif($counter>1) //we will search for unique fields and see if they are getting duplicates
+                {
+                    $where_clause='';
+                    for($x=1;$x<$counter;$x++)
+                    {
+                        $key = array_search($row[$x][0],$fields_array);
+                        if($key!==FALSE)
+                        {
+                            $values_array[$key] = str_replace('\'','',$values_array[$key]);
+                            $values_array[$key] = str_replace('"','',$values_array[$key]);
+                            if($x==$counter-1){$where_clause .="{$row[$x][0]} ='{$values_array[$key]}'"; }
+                            else{$where_clause .="{$row[$x][0]} ='{$values_array[$key]}' AND ";}
+                        }
+                    }
+                    $sql="SELECT COUNT(*) FROM $table WHERE $where_clause";
+                    $result = $this->dbQuery($sql);
+                    $row2 = pg_fetch_row($result);
+                    if($row2[0]!=0){$sql = "DELETE FROM $table WHERE $where_clause'";}
+                    
+                    $sql="INSERT INTO $table ($fields) VALUES ($values)";  
+                }
+                else
+                {
+                    COM_errorLog("There was a problem saving this DB_save call: $fields,$values"); 
+                }
+            }
+            else //no keys to worry about
+            {
+                $sql="INSERT INTO $table ($fields) VALUES ($values)";  
+            }
         }
-        //$sql = "REPLACE INTO $table ($fields) VALUES ($values)";
 
         $this->dbQuery($sql);
 
         if ($this->isVerbose()) {
             $this->_errorlog("\n*** Leaving database->dbSave ***");
         }
-        unset($row);
-        unset($result);
     }
     
         /**
@@ -464,8 +497,8 @@ class DataBase
                     next($value);
                 }
             } else {
-                // error, they both have to be arrays and of the
-                // same size
+                // error, they both have to be arrays and of the same size
+                COM_errorLog("The columns ($id) do not match the value count ($value)"); 
                 return false;
             }
         } else {
@@ -501,6 +534,7 @@ class DataBase
     */
     function dbChange($table,$item_to_set,$value_to_set,$id,$value, $supress_quotes=false)
     {
+
         if ($this->isVerbose()) {
             $this->_errorlog("\n*** Inside dbChange ***");
         }
@@ -566,13 +600,12 @@ class DataBase
 
         // return only if recordset exists, otherwise 0
         if ($recordset) {
-           $rows=0; 
-            while ($row = pg_fetch_row($recordset)) { $rows++;}
+            $rows=0; 
+            $rows = pg_num_rows($recordset);
             if ($this->isVerbose()) {
                 $this->_errorlog('got ' . $rows . ' rows');
                 $this->_errorlog("\n*** Inside database->dbNumRows ***");
             }
-            unset($row);
             return $rows;
         } else {
             if ($this->isVerbose()) {
@@ -654,13 +687,14 @@ class DataBase
     */
     function dbInsertId($link_identifier = '',$sequence='')
     {
-        if($sequence !='')
+        if(!empty($sequence))
         {
-            $result = dbQuery('SELECT CURRVAL(\''.$sequence.'\'); ');    
+            $result = @pg_query('SELECT CURRVAL(\''.$sequence.'\'); ');
+            if($result==FALSE) {$result = @pg_query('SELECT NEXTVAL(\''.$sequence.'\'); ');}    
         }
         else
         {
-            $result = dbQuery('SELECT lastval();');    
+            $result = pg_query('SELECT LASTVAL();');    
         }
         $row = pg_fetch_row($result);
         unset($result);
@@ -757,27 +791,21 @@ class DataBase
         $result = pg_get_result($this->_db);
         if($this->_pgsql_version>=7.4)
         {
-          if(pg_result_error_field($result,PGSQL_DIAG_SOURCE_LINE))
-          {
-              $this->_errorlog('You have an error in your SQL query on line'.pg_result_error_field($result,PGSQL_DIAG_SOURCE_LINE)."<br/> SQL in question: $sql");
-             return('Error:'.pg_result_error_field($result,PGSQL_DIAG_SQLSTATE).'<br/>Description:'.pg_result_error_field($result,PGSQL_DIAG_MESSAGE_DETAIL));
-          }
-          return;  
-        }
-        else
-        {
-        if (pg_result_error($result)) {
-            $this->_errorlog(pg_result_error($result) . ". SQL in question: $sql");        
-            if ($this->_display_error) 
+            if(pg_result_error_field($result,PGSQL_DIAG_SOURCE_LINE)) //this provides a much more detailed error report
             {
-                return  'Error'.pg_result_error($result);
-            } else
-             {
-                return 'An SQL error has occurred. Please see error.log for details.';
-             }
+              $this->_errorlog('You have an error in your SQL query on line'.pg_result_error_field($result,PGSQL_DIAG_SOURCE_LINE)."<br/> SQL in question: $sql");
+             $error = 'Error:'.pg_result_error_field($result,PGSQL_DIAG_SQLSTATE).'<br/>Description:'.pg_result_error_field($result,PGSQL_DIAG_MESSAGE_DETAIL);
+            }
+            else {$error = "An SQL error has occurred in the following SQL : $sql.";}
         }
-  
-        return;
+         else
+         {
+            if (pg_result_error($result)) {
+                $this->_errorlog(pg_result_error($result) . ". SQL in question: $sql");        
+                if ($this->_display_error) {$error = 'Error'.pg_result_error($result);} 
+                else{$error = "An SQL error has occurred in the following SQL : $sql.";}
+            }
+        return $error;
         }
     }
     
@@ -798,7 +826,4 @@ class DataBase
         return $this->_verbose;
     }
 } //end db
-
-$test = new DataBase('localhost','postgres','postgres','gagne1');
-
 ?>

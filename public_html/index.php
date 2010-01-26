@@ -79,11 +79,17 @@ if( $microsummary )
          . "FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u, "
          . "{$_TABLES['topics']} AS t WHERE (s.uid = u.uid) AND (s.tid = t.tid) AND"
          . $sql . "ORDER BY featured DESC, date DESC LIMIT 0, 1";
-
+         
     $msql['mssql']="SELECT STRAIGHT_JOIN s.title "
          . "FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u, "
          . "{$_TABLES['topics']} AS t WHERE (s.uid = u.uid) AND (s.tid = t.tid) AND"
          . $sql . "ORDER BY featured DESC, date DESC LIMIT 0, 1";
+         
+      $msql['pgsql']="SELECT s.title "
+     . "FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u, "
+     . "{$_TABLES['topics']} AS t WHERE (s.uid = u.uid) AND (s.tid = t.tid) AND"
+     . $sql . "ORDER BY featured DESC, date DESC LIMIT 1 OFFSET 0";
+         
     $result = DB_query ($msql);
 
     if ( $A = DB_fetchArray( $result ) ) {
@@ -296,7 +302,12 @@ if (!empty($U['tids'])) {
 $sql .= COM_getTopicSQL ('AND', 0, 's') . ' ';
 
 if ($newstories) {
-    $sql .= "AND (date >= (date_sub(NOW(), INTERVAL {$_CONF['newstoriesinterval']} SECOND))) ";
+    
+    $sql['mysql'] .= "AND (date >= (date_sub(NOW(), INTERVAL {$_CONF['newstoriesinterval']} SECOND))) ";
+    $sql['pgsql'] .= "AND (date >= (NOW(), INTERVAL '{$_CONF['newstoriesinterval']} SECOND')) ";
+    $sql['pgsql'] .= "AND (date >= (date_sub(NOW(), INTERVAL {$_CONF['newstoriesinterval']} SECOND))) ";
+
+
 }
 
 $offset = ($page - 1) * $limit;
@@ -308,7 +319,7 @@ if ($_CONF['allow_user_photo'] == 1) {
     }
 }
 
-$msql = array();
+$msql = array(); 
 $msql['mysql']="SELECT STRAIGHT_JOIN s.*, UNIX_TIMESTAMP(s.date) AS unixdate, "
          . 'UNIX_TIMESTAMP(s.expire) as expireunix, '
          . $userfields . ", t.topic, t.imageurl "
@@ -323,6 +334,12 @@ $msql['mssql']="SELECT STRAIGHT_JOIN s.sid, s.uid, s.draft_flag, s.tid, s.date, 
          . "FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u, "
          . "{$_TABLES['topics']} AS t WHERE (s.uid = u.uid) AND (s.tid = t.tid) AND"
          . $sql . "ORDER BY featured DESC, date DESC LIMIT $offset, $limit";
+$msql['pgsql']="SELECT s.*, UNIX_TIMESTAMP(s.date) AS unixdate,
+            UNIX_TIMESTAMP(s.expire) as expireunix,
+            {$userfields}, t.topic, t.imageurl
+            FROM {$_TABLES['stories']} AS s, {$_TABLES['users']} AS u,
+            {$_TABLES['topics']} AS t WHERE (s.uid = u.uid) AND (s.tid = t.tid) AND
+            {$sql} ORDER BY featured DESC, date DESC LIMIT {$limit} OFFSET {$offset}";
 
 $result = DB_query ($msql);
 
@@ -333,7 +350,6 @@ $D = DB_fetchArray ($data);
 $num_pages = ceil ($D['count'] / $limit);
 
 if ( $A = DB_fetchArray( $result ) ) {
-
     $story = new Story();
     $story->loadFromArray($A);
     if ( $_CONF['showfirstasfeatured'] == 1 ) {

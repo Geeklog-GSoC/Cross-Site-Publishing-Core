@@ -338,6 +338,9 @@ class ListFactory {
         if (is_array($sql)) {
             $sql['mysql'] = preg_replace('/SELECT.*FROM/is', 'SELECT COUNT(*) FROM', $sql['mysql']);
             $sql['mssql'] = preg_replace('/SELECT.*FROM/is', 'SELECT COUNT(*) FROM', $sql['mssql']);
+            $sql['pgsql'] = preg_replace('/SELECT.*FROM/is', 'SELECT COUNT(*) FROM', $sql['pgsql']);
+
+            
         }
         else {
             $sql = preg_replace('/SELECT.*FROM/is', 'SELECT COUNT(*) FROM', $sql);
@@ -545,8 +548,7 @@ class ListFactory {
         $direction = $this->_sort_arr['direction'] == 'asc' ? SORT_ASC : SORT_DESC;
         $column = array();
         foreach ($rows_arr as $sortarray) {
-            $tmp = strip_tags($sortarray[ $this->_sort_arr['field'] ]);
-            $column[] = ($tmp == 'LF_NULL' ? 0 : $tmp);
+            $column[] = strip_tags($sortarray[ $this->_sort_arr['field'] ]);
         }
         array_multisort($column, $direction, $rows_arr);
 

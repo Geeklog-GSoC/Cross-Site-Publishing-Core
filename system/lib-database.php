@@ -1,6 +1,7 @@
 <?php
 
 /* Reminder: always indent with 4 spaces (no tabs). */
+/* Reminder: always indent with 4 spaces (no tabs). */
 // +---------------------------------------------------------------------------+
 // | Geeklog 1.6                                                               |
 // +---------------------------------------------------------------------------+
@@ -456,11 +457,11 @@ function DB_fetchArray($recordset, $both = true)
 * @return   int                             Returns the last ID auto-generated
 *
 */
-function DB_insertId($link_identifier = '')
+function DB_insertId($link_identifier = '',$sequence='')
 {
     global $_DB;
 
-    return $_DB->dbInsertId($link_identifier);
+    return $_DB->dbInsertId($link_identifier,$sequence);
 }
 
 /**
@@ -562,6 +563,13 @@ function DB_checkTableExists($table)
     } elseif ($_DB_dbms == 'mssql') {
         $result = DB_query("SELECT 1 FROM sysobjects WHERE name='{$_TABLES[$table]}' AND xtype='U'");
         if (DB_numRows ($result) > 0) {
+            $exists = true;
+        }
+    }
+    elseif ($_DB_dbms == 'pgsql') {
+        $result = DB_query("select check_table('{$_TABLES[$table]}', 'public');");
+        $row=DB_fetchArray($result);
+        if(!empty($row[0])){
             $exists = true;
         }
     }

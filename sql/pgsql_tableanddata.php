@@ -1,80 +1,5 @@
 <?php
 
-$_DB_table_prefix='';
-
-$_TABLES['access']              = $_DB_table_prefix . 'access';
-$_TABLES['article_images']      = $_DB_table_prefix . 'article_images';
-$_TABLES['blocks']              = $_DB_table_prefix . 'blocks';
-$_TABLES['commentcodes']        = $_DB_table_prefix . 'commentcodes';
-$_TABLES['commentedits']        = $_DB_table_prefix . 'commentedits';
-$_TABLES['commentmodes']        = $_DB_table_prefix . 'commentmodes';
-$_TABLES['commentnotifications']= $_DB_table_prefix . 'commentnotifications';
-$_TABLES['comments']            = $_DB_table_prefix . 'comments';
-$_TABLES['commentsubmissions']  = $_DB_table_prefix . 'commentsubmissions';
-$_TABLES['conf_values']         = $_DB_table_prefix . 'conf_values';
-$_TABLES['cookiecodes']         = $_DB_table_prefix . 'cookiecodes';
-$_TABLES['dateformats']         = $_DB_table_prefix . 'dateformats';
-$_TABLES['featurecodes']        = $_DB_table_prefix . 'featurecodes';
-$_TABLES['features']            = $_DB_table_prefix . 'features';
-$_TABLES['frontpagecodes']      = $_DB_table_prefix . 'frontpagecodes';
-$_TABLES['group_assignments']   = $_DB_table_prefix . 'group_assignments';
-$_TABLES['groups']              = $_DB_table_prefix . 'groups';
-$_TABLES['maillist']            = $_DB_table_prefix . 'maillist';
-$_TABLES['pingservice']         = $_DB_table_prefix . 'pingservice';
-$_TABLES['plugins']             = $_DB_table_prefix . 'plugins';
-$_TABLES['postmodes']           = $_DB_table_prefix . 'postmodes';
-$_TABLES['sessions']            = $_DB_table_prefix . 'sessions';
-$_TABLES['sortcodes']           = $_DB_table_prefix . 'sortcodes';
-$_TABLES['speedlimit']          = $_DB_table_prefix . 'speedlimit';
-$_TABLES['statuscodes']         = $_DB_table_prefix . 'statuscodes';
-$_TABLES['stories']             = $_DB_table_prefix . 'stories';
-$_TABLES['storysubmission']     = $_DB_table_prefix . 'storysubmission';
-$_TABLES['syndication']         = $_DB_table_prefix . 'syndication';
-$_TABLES['tokens']              = $_DB_table_prefix . 'tokens';
-$_TABLES['topics']              = $_DB_table_prefix . 'topics';
-$_TABLES['trackback']           = $_DB_table_prefix . 'trackback';
-$_TABLES['trackbackcodes']      = $_DB_table_prefix . 'trackbackcodes';
-$_TABLES['usercomment']         = $_DB_table_prefix . 'usercomment';
-$_TABLES['userindex']           = $_DB_table_prefix . 'userindex';
-$_TABLES['userinfo']            = $_DB_table_prefix . 'userinfo';
-$_TABLES['userprefs']           = $_DB_table_prefix . 'userprefs';
-$_TABLES['users']               = $_DB_table_prefix . 'users';
-$_TABLES['vars']                = $_DB_table_prefix . 'vars';
-
-
-// Tables used by the bundled plugins
-
-// Calendar plugin
-$_TABLES['events']              = $_DB_table_prefix . 'events';
-$_TABLES['eventsubmission']     = $_DB_table_prefix . 'eventsubmission';
-$_TABLES['personal_events']     = $_DB_table_prefix . 'personal_events';
-
-// Links plugin
-$_TABLES['linkcategories']      = $_DB_table_prefix . 'linkcategories';
-$_TABLES['links']               = $_DB_table_prefix . 'links';
-$_TABLES['linksubmission']      = $_DB_table_prefix . 'linksubmission';
-
-// Polls plugin
-$_TABLES['pollanswers']         = $_DB_table_prefix . 'pollanswers';
-$_TABLES['pollquestions']       = $_DB_table_prefix . 'pollquestions';
-$_TABLES['polltopics']          = $_DB_table_prefix . 'polltopics';
-$_TABLES['pollvoters']          = $_DB_table_prefix . 'pollvoters';
-
-// Spam-X plugin
-$_TABLES['spamx']               = $_DB_table_prefix . 'spamx';
-
-// Static Pages plugin
-$_TABLES['staticpage']          = $_DB_table_prefix . 'staticpage';
-
-
-// These tables aren't used by Geeklog any more, but the table names are still
-// needed when upgrading from old versions
-$_TABLES['commentspeedlimit']   = $_DB_table_prefix . 'commentspeedlimit';
-$_TABLES['submitspeedlimit']    = $_DB_table_prefix . 'submitspeedlimit';
-$_TABLES['tzcodes']             = $_DB_table_prefix . 'tzcodes';
-$_TABLES['userevent']           = $_DB_table_prefix . 'userevent';
-
-
 $_SQL[] = "
 CREATE TABLE {$_TABLES['access']} (
   acc_ft_id smallint NOT NULL default '0',
@@ -93,9 +18,8 @@ CREATE TABLE {$_TABLES['article_images']} (
 ";
 
 $_SQL[] = "
-CREATE SEQUENCE bid_seq MINVALUE 0;
 CREATE TABLE {$_TABLES['blocks']} (
-  bid smallint default nextval('bid_seq') ,
+  bid SERIAL ,
   is_enabled smallint NOT NULL DEFAULT '1',
   name varchar(48) NOT NULL default '',
   type varchar(20) NOT NULL default 'normal',
@@ -179,7 +103,7 @@ CREATE TABLE {$_TABLES['comments']} (
   indent smallint  NOT NULL default '0',
   name varchar(32) default NULL,
   uid smallint NOT NULL default '1',
-  ipaddress varchar(15) NOT NULL default '',
+  ipaddress varchar(39) NOT NULL default '',
   PRIMARY KEY  (cid)
 );
   CREATE INDEX comments_sid ON {$_TABLES['comments']}(sid);
@@ -200,7 +124,7 @@ CREATE TABLE {$_TABLES['commentsubmissions']} (
   uid smallint NOT NULL default '1',
   name varchar(32) default NULL,
   pid int NOT NULL default '0',
-  ipaddress varchar(15) NOT NULL,
+  ipaddress varchar(39) NOT NULL,
   PRIMARY KEY  (cid)
 )
 ";
@@ -245,9 +169,8 @@ CREATE TABLE {$_TABLES['featurecodes']} (
 ";
 
 $_SQL[] = "
-CREATE SEQUENCE ft_id_seq MINVALUE 0;
 CREATE TABLE {$_TABLES['features']} (
-  ft_id smallint default nextval('ft_id_seq'),
+  ft_id SERIAL ,
   ft_name varchar(20) NOT NULL default '',
   ft_descr varchar(255) NOT NULL default '',
   ft_gl_core smallint NOT NULL default '0',
@@ -279,24 +202,23 @@ CREATE TABLE {$_TABLES['groups']} (
   grp_name varchar(50) NOT NULL default '',
   grp_descr varchar(255) NOT NULL default '',
   grp_gl_core smallint  NOT NULL default '0',
+  grp_default smallint  NOT NULL default '0',
   PRIMARY KEY  (grp_id)
 );
 CREATE UNIQUE INDEX grp_name ON {$_TABLES['groups']}(grp_name);
 ";
 
 $_SQL[] = "
-CREATE SEQUENCE code_id_seq MINVALUE 0;
 CREATE TABLE {$_TABLES['maillist']} (
-  code smallint default nextval('code_id_seq'), 
+  code SERIAL, 
   name char(32) default NULL,
   PRIMARY KEY  (code)
 )
 ";
 
 $_SQL[] = "
-CREATE SEQUENCE pid_seq MINVALUE 0;
 CREATE TABLE {$_TABLES['pingservice']} (
-  pid smallint default nextval('pid_seq'),
+  pid SERIAL,
   name varchar(128) default NULL,
   ping_url varchar(255) default NULL,
   site_url varchar(255) default NULL,
@@ -330,7 +252,7 @@ $_SQL[] = "
 CREATE TABLE {$_TABLES['sessions']} (
   sess_id int NOT NULL default '0',
   start_time int NOT NULL default '0',
-  remote_ip varchar(15) NOT NULL default '',
+  remote_ip varchar(39) NOT NULL default '',
   uid smallint NOT NULL default '1',
   md5_sess_id varchar(128) default NULL,
   PRIMARY KEY  (sess_id)
@@ -350,7 +272,7 @@ CREATE TABLE {$_TABLES['sortcodes']} (
 $_SQL[] = "
 CREATE TABLE {$_TABLES['speedlimit']} (
   id SERIAL,
-  ipaddress varchar(15) NOT NULL default '',
+  ipaddress varchar(39) NOT NULL default '',
   date int default NULL,
   type varchar(30) NOT NULL default 'submit',
   PRIMARY KEY (id));
@@ -391,6 +313,8 @@ CREATE TABLE {$_TABLES['stories']} (
   postmode varchar(10) NOT NULL default 'html',
   advanced_editor_mode smallint  default '0',
   frontpage smallint default '1',
+  meta_description TEXT NULL,
+  meta_keywords TEXT NULL,
   owner_id smallint NOT NULL default '1',
   group_id smallint NOT NULL default '2',
   perm_owner smallint NOT NULL default '3',
@@ -466,6 +390,8 @@ CREATE TABLE {$_TABLES['topics']} (
   tid varchar(20) NOT NULL default '',
   topic varchar(48) default NULL,
   imageurl varchar(255) default NULL,
+  meta_description TEXT NULL,
+  meta_keywords TEXT NULL,
   sortnum smallint default NULL,
   limitnews smallint default NULL,
   is_default smallint  NOT NULL DEFAULT '0',
@@ -490,7 +416,7 @@ CREATE TABLE {$_TABLES['trackback']} (
   excerpt text,
   date timestamp default NULL,
   type varchar(30) NOT NULL default 'article',
-  ipaddress varchar(15) NOT NULL default '',
+  ipaddress varchar(39) NOT NULL default '',
   PRIMARY KEY (cid)
 );
 
@@ -554,7 +480,8 @@ CREATE TABLE {$_TABLES['userprefs']} (
   uid smallint NOT NULL default '1',
   noicons smallint NOT NULL default '0',
   willing smallint NOT NULL default '1',
-  dfid smallint NULL default '0',
+  dfid smallint NOT NULL default '0',
+  advanced_editor smallint NOT NULL default '1',
   tzid varchar(125) NOT NULL default '',
   emailstories smallint NOT NULL default '1',
   emailfromadmin smallint NOT NULL default '1',
@@ -596,10 +523,29 @@ CREATE TABLE {$_TABLES['users']} (
 $_SQL[] = "
 CREATE TABLE {$_TABLES['vars']} (
   name varchar(20) NOT NULL default '',
-  value varchar(128) default NULL,
+  value text default NULL,
   PRIMARY KEY  (name)
 )
 ";
+
+$_SQL[] = "
+CREATE OR REPLACE FUNCTION UNIX_TIMESTAMP(timestamp with time zone) RETURNS integer AS '
+SELECT ROUND(EXTRACT(EPOCH FROM ABSTIME($1)))::int4 AS result;
+' LANGUAGE 'SQL';
+";
+
+$_SQL[] = "
+CREATE OR REPLACE FUNCTION UNIX_TIMESTAMP() RETURNS integer AS '
+SELECT ROUND(EXTRACT(EPOCH FROM ABSTIME(NOW())))::int4 AS result;
+' LANGUAGE 'SQL';
+";
+
+$_SQL[] = "CREATE OR REPLACE FUNCTION FROM_UNIXTIME(integer) RETURNS timestamp AS '
+SELECT $1::ABSTIME::TIMESTAMP AS result;
+' LANGUAGE 'SQL';
+";
+
+$_SQL[] = "CREATE OR REPLACE FUNCTION CURDATE() RETURNS date AS 'SELECT current_date AS result' LANGUAGE 'SQL';";
 
 $_DATA[] = "INSERT INTO {$_TABLES['access']} (acc_ft_id, acc_grp_id) VALUES (1,3) ";
 $_DATA[] = "INSERT INTO {$_TABLES['access']} (acc_ft_id, acc_grp_id) VALUES (2,3) ";
@@ -623,13 +569,13 @@ $_DATA[] = "INSERT INTO {$_TABLES['access']} (acc_ft_id, acc_grp_id) VALUES (19,
 $_DATA[] = "INSERT INTO {$_TABLES['access']} (acc_ft_id, acc_grp_id) VALUES (20,14) ";
 $_DATA[] = "INSERT INTO {$_TABLES['access']} (acc_ft_id, acc_grp_id) VALUES (21,15) ";
 
-$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES (1,1,'user_block','gldefault','User Functions','all',2,'','','epoch',1,'',4,2,3,3,2,2) ";
-$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES (2,1,'admin_block','gldefault','Admins Only','all',1,'','','epoch',1,'',4,2,3,3,2,2) ";
-$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES (3,1,'section_block','gldefault','Topics','all',0,'','','epoch',1,'',4,2,3,3,2,2) ";
-$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES (4,1,'whats_new_block','gldefault','What\'s New','all',3,'','','epoch',0,'',4,2,3,3,2,2) ";
-$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES (5,1,'first_block','normal','About Geeklog','homeonly',1,'<p><b>Welcome to Geeklog!</b></p><p>If you\'re already familiar with Geeklog - and especially if you\'re not: There have been many improvements to Geeklog since earlier versions that you might want to read up on. Please read the <a href=\"docs/english/changes.html\">release notes</a>. If you need help, please see the <a href=\"docs/english/support.html\">support options</a>.</p>','','epoch',0,'',4,2,3,3,2,2) ";
-$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES (6,1,'whosonline_block','phpblock','Who\'s Online','all',0,'','','epoch',0,'phpblock_whosonline',4,2,3,3,2,2) ";
-$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES (7,1,'older_stories','gldefault','Older Stories','all',5,'','','epoch',1,'',4,2,3,3,2,2) ";
+$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ((SELECT NEXTVAL('{$_TABLES['blocks']}_bid_seq')),1,'user_block','gldefault','User Functions','all',20,'','','epoch',1,'',4,2,3,3,2,2) ";
+$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ((SELECT NEXTVAL('{$_TABLES['blocks']}_bid_seq')),1,'admin_block','gldefault','Admins Only','all',20,'','','epoch',1,'',4,2,3,3,2,2) ";
+$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ((SELECT NEXTVAL('{$_TABLES['blocks']}_bid_seq')),1,'section_block','gldefault','Topics','all',10,'','','epoch',1,'',4,2,3,3,2,2) ";
+$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ((SELECT NEXTVAL('{$_TABLES['blocks']}_bid_seq')),1,'whats_new_block','gldefault','What\'s New','all',30,'','','epoch',0,'',4,2,3,3,2,2) ";
+$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ((SELECT NEXTVAL('{$_TABLES['blocks']}_bid_seq')),1,'first_block','normal','About Geeklog','homeonly',20,'<p><b>Welcome to Geeklog!</b></p><p>If you\'re already familiar with Geeklog - and especially if you\'re not: There have been many improvements to Geeklog since earlier versions that you might want to read up on. Please read the <a href=\"docs/english/changes.html\">release notes</a>. If you need help, please see the <a href=\"docs/english/support.html\">support options</a>.</p>','','epoch',0,'',4,2,3,3,2,2) ";
+$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ((SELECT NEXTVAL('{$_TABLES['blocks']}_bid_seq')),1,'whosonline_block','phpblock','Who\'s Online','all',10,'','','epoch',0,'phpblock_whosonline',4,2,3,3,2,2) ";
+$_DATA[] = "INSERT INTO {$_TABLES['blocks']} (bid, is_enabled, name, type, title, tid, blockorder, content, rdfurl, rdfupdated, onleft, phpblockfn, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ((SELECT NEXTVAL('{$_TABLES['blocks']}_bid_seq')),1,'older_stories','gldefault','Older Stories','all',40,'','','epoch',1,'',4,2,3,3,2,2) ";
 
 $_DATA[] = "INSERT INTO {$_TABLES['commentcodes']} (code, name) VALUES (0,'Comments Enabled') ";
 $_DATA[] = "INSERT INTO {$_TABLES['commentcodes']} (code, name) VALUES (-1,'Comments Disabled') ";
@@ -672,26 +618,27 @@ $_DATA[] = "INSERT INTO {$_TABLES['dateformats']} (dfid, format, description) VA
 $_DATA[] = "INSERT INTO {$_TABLES['featurecodes']} (code, name) VALUES (0,'Not Featured') ";
 $_DATA[] = "INSERT INTO {$_TABLES['featurecodes']} (code, name) VALUES (1,'Featured') ";
 
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (1,'story.edit','Access to story editor',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (2,'story.moderate','Ability to moderate pending stories',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (3,'story.submit','May skip the story submission queue',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (4,'story.ping', 'Ability to send pings, pingbacks, or trackbacks for stories', 1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (5,'user.edit','Access to user editor',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (6,'user.delete','Ability to delete a user',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (7,'user.mail','Ability to send email to members',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (8,'syndication.edit', 'Access to Content Syndication', 1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (9,'webservices.atompub', 'May use Atompub Webservices (if restricted)', 1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (10,'block.edit','Access to block editor',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (11,'topic.edit','Access to topic editor',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (13,'plugin.edit','Can change plugin status',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (14,'group.edit','Ability to edit groups',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (15,'group.delete','Ability to delete groups',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (16,'block.delete','Ability to delete a block',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (17,'plugin.install','Can install/uninstall plugins',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (18,'plugin.upload','Can upload new plugins',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (19,'group.assign','Ability to assign users to groups',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (20, 'comment.moderate', 'Ability to moderate comments', 1)";
-$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES (21, 'comment.submit', 'Comments are automatically published', 1)";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'story.edit','Access to story editor',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'story.moderate','Ability to moderate pending stories',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'story.submit','May skip the story submission queue',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'story.ping', 'Ability to send pings, pingbacks, or trackbacks for stories', 1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'user.edit','Access to user editor',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'user.delete','Ability to delete a user',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'user.mail','Ability to send email to members',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'syndication.edit', 'Access to Content Syndication', 1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'webservices.atompub', 'May use Atompub Webservices (if restricted)', 1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'block.edit','Access to block editor',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'topic.edit','Access to topic editor',1) ";
+$_DATA[] = "SELECT nextval('{$_TABLES['features']}_ft_id_seq')";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'plugin.edit','Can change plugin status',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'group.edit','Ability to edit groups',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'group.delete','Ability to delete groups',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'block.delete','Ability to delete a block',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'plugin.install','Can install/uninstall plugins',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'plugin.upload','Can upload new plugins',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')),'group.assign','Ability to assign users to groups',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')), 'comment.moderate', 'Ability to moderate comments', 1)";
+$_DATA[] = "INSERT INTO {$_TABLES['features']} (ft_id, ft_name, ft_descr, ft_gl_core) VALUES ((SELECT nextval('{$_TABLES['features']}_ft_id_seq')), 'comment.submit', 'Comments are automatically published', 1)";
 
 $_DATA[] = "INSERT INTO {$_TABLES['frontpagecodes']} (code, name) VALUES (0,'Show Only in Topic') ";
 $_DATA[] = "INSERT INTO {$_TABLES['frontpagecodes']} (code, name) VALUES (1,'Show on Front Page') ";
@@ -729,26 +676,26 @@ $_DATA[] = "INSERT INTO {$_TABLES['group_assignments']} (ug_main_grp_id, ug_uid,
 $_DATA[] = "INSERT INTO {$_TABLES['group_assignments']} (ug_main_grp_id, ug_uid, ug_grp_id) VALUES (15,NULL,1) ";
 
 // Traditionally, grp_id 1 = Root, 2 = All Users, 13 = Logged-In Users
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (1,'Root','Has full access to the site',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (2,'All Users','Group that a typical user is added to',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (3,'Story Admin','Has full access to story features',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (4,'Block Admin','Has full access to block features',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (5,'Syndication Admin', 'Can create and modify web feeds for the site',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (6,'Topic Admin','Has full access to topic features',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (7,'Remote Users', 'Users in this group can have authenticated against a remote server.',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (8,'Webservices Users', 'Can use the Webservices API (if restricted)',0) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (9,'User Admin','Has full access to user features',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (10,'Plugin Admin','Has full access to plugin features',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (11,'Group Admin','Is a User Admin with access to groups, too',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (12,'Mail Admin','Can use Mail Utility',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (13,'Logged-in Users','All registered members',1) ";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (14, 'Comment Admin', 'Can moderate comments', 1)";
-$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES (15, 'Comment Submitters', 'Can submit comments', 0);";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Root','Has full access to the site',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'All Users','Group that a typical user is added to',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Story Admin','Has full access to story features',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Block Admin','Has full access to block features',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Syndication Admin', 'Can create and modify web feeds for the site',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Topic Admin','Has full access to topic features',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Remote Users', 'Users in this group can have authenticated against a remote server.',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Webservices Users', 'Can use the Webservices API (if restricted)',0) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'User Admin','Has full access to user features',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Plugin Admin','Has full access to plugin features',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Group Admin','Is a User Admin with access to groups, too',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Mail Admin','Can use Mail Utility',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')),'Logged-in Users','All registered members',1) ";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')), 'Comment Admin', 'Can moderate comments', 1)";
+$_DATA[] = "INSERT INTO {$_TABLES['groups']} (grp_id, grp_name, grp_descr, grp_gl_core) VALUES ((SELECT nextval('{$_TABLES['groups']}_grp_id_seq')), 'Comment Submitters', 'Can submit comments', 0);";
 
-$_DATA[] = "INSERT INTO {$_TABLES['maillist']} (code, name) VALUES (0,'Don\'t Email') ";
-$_DATA[] = "INSERT INTO {$_TABLES['maillist']} (code, name) VALUES (1,'Email Headlines Each Night') ";
+$_DATA[] = "INSERT INTO {$_TABLES['maillist']} (code, name) VALUES ((SELECT nextval('{$_TABLES['maillist']}_code_seq')),'Don\'t Email') ";
+$_DATA[] = "INSERT INTO {$_TABLES['maillist']} (code, name) VALUES ((SELECT nextval('{$_TABLES['maillist']}_code_seq')),'Email Headlines Each Night') ";
 
-$_DATA[] = "INSERT INTO {$_TABLES['pingservice']} (pid, name, site_url, ping_url, method, is_enabled) VALUES (1, 'Ping-O-Matic', 'http://pingomatic.com/', 'http://rpc.pingomatic.com/', 'weblogUpdates.ping', 1)";
+$_DATA[] = "INSERT INTO {$_TABLES['pingservice']} (pid, name, site_url, ping_url, method, is_enabled) VALUES ((SELECT nextval('{$_TABLES['pingservice']}_pid_seq')), 'Ping-O-Matic', 'http://pingomatic.com/', 'http://rpc.pingomatic.com/', 'weblogUpdates.ping', 1)";
 
 $_DATA[] = "INSERT INTO {$_TABLES['postmodes']} (code, name) VALUES ('plaintext','Plain Old Text') ";
 $_DATA[] = "INSERT INTO {$_TABLES['postmodes']} (code, name) VALUES ('html','HTML Formatted') ";
@@ -766,8 +713,8 @@ $_DATA[] = "INSERT INTO {$_TABLES['storysubmission']} (sid, uid, tid, title, int
 
 $_DATA[] = "INSERT INTO {$_TABLES['syndication']} (type, topic, header_tid, format, limits, content_length, title, description, filename, charset, language, is_enabled, updated, update_info) VALUES ('article', '::all', 'all', 'RSS-2.0', 10, 1, 'Geeklog Site', 'Another Nifty Geeklog Site', 'geeklog.rss', 'iso-8859-1', 'en-gb', 1, 'epoch', NULL)";
 
-$_DATA[] = "INSERT INTO {$_TABLES['topics']} (tid, topic, imageurl, sortnum, limitnews, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ('General','General News','/images/topics/topic_news.gif',1,10,6,2,3,2,2,2)";
-$_DATA[] = "INSERT INTO {$_TABLES['topics']} (tid, topic, imageurl, sortnum, limitnews, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ('Geeklog','Geeklog','/images/topics/topic_gl.gif',2,10,6,2,3,2,2,2)";
+$_DATA[] = "INSERT INTO {$_TABLES['topics']} (tid, topic, imageurl, meta_description, meta_keywords, sortnum, limitnews, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ('General','General News','/images/topics/topic_news.gif','A topic that contains general news related posts.','News, Post, Information',1,10,6,2,3,2,2,2)";
+$_DATA[] = "INSERT INTO {$_TABLES['topics']} (tid, topic, imageurl, meta_description, meta_keywords, sortnum, limitnews, group_id, owner_id, perm_owner, perm_group, perm_members, perm_anon) VALUES ('Geeklog','Geeklog','/images/topics/topic_gl.gif','A topic that contains posts about Geeklog.','Geeklog, Posts, Information',2,10,6,2,3,2,2,2)";
 
 $_DATA[] = "INSERT INTO {$_TABLES['usercomment']} (uid, commentmode, commentorder, commentlimit) VALUES (1,'nested','ASC',100) ";
 $_DATA[] = "INSERT INTO {$_TABLES['usercomment']} (uid, commentmode, commentorder, commentlimit) VALUES (2,'threaded','ASC',100) ";
@@ -785,8 +732,8 @@ $_DATA[] = "INSERT INTO {$_TABLES['userprefs']} (uid, noicons, willing, dfid, tz
 # Dumping data for table 'users'
 #
 
-$_DATA[] = "INSERT INTO {$_TABLES['users']} (uid, username, fullname, passwd, email, homepage, sig, regdate, cookietimeout, theme, status) VALUES (1,'Anonymous','Anonymous','',NULL,NULL,'',NOW(),0,NULL,3) ";
-$_DATA[] = "INSERT INTO {$_TABLES['users']} (uid, username, fullname, passwd, email, homepage, sig, regdate, cookietimeout, theme, status) VALUES (2,'Admin','Geeklog SuperUser','5f4dcc3b5aa765d61d8327deb882cf99','root@localhost','http://www.geeklog.net/','',NOW(),28800,NULL,3) ";
+$_DATA[] = "INSERT INTO {$_TABLES['users']} (uid, username, fullname, passwd, email, homepage, sig, regdate, cookietimeout, theme, status) VALUES ((SELECT NEXTVAL('{$_TABLES['users']}_uid_seq')),'Anonymous','Anonymous','',NULL,NULL,'',NOW(),0,NULL,3) ";
+$_DATA[] = "INSERT INTO {$_TABLES['users']} (uid, username, fullname, passwd, email, homepage, sig, regdate, cookietimeout, theme, status) VALUES ((SELECT NEXTVAL('{$_TABLES['users']}_uid_seq')),'Admin','Geeklog SuperUser','5f4dcc3b5aa765d61d8327deb882cf99','root@localhost','http://www.geeklog.net/','',NOW(),28800,NULL,3) ";
 
 $_DATA[] = "INSERT INTO {$_TABLES['vars']} (name, value) VALUES ('totalhits','0') ";
 $_DATA[] = "INSERT INTO {$_TABLES['vars']} (name, value) VALUES ('lastemailedstories','') ";
@@ -795,19 +742,4 @@ $_DATA[] = "INSERT INTO {$_TABLES['vars']} (name, value) VALUES ('database_versi
 
 $_DATA[] = "INSERT INTO {$_TABLES['trackbackcodes']} (code, name) VALUES (0,'Trackback Enabled') ";
 $_DATA[] = "INSERT INTO {$_TABLES['trackbackcodes']} (code, name) VALUES (-1,'Trackback Disabled') ";
-
-// connect to a database named "mary" on "localhost" at port "5432"
-
-$dbconn3 = pg_connect("host=localhost port=5432 dbname=geeklog user=postgres password=gagne1");
-
-foreach($_SQL as $query)
-{
-pg_query($dbconn3, $query);
-}
-
-foreach($_DATA as $data)
-{
-    pg_query($dbconn3,$data);
-}
-
 ?>

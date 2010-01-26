@@ -169,7 +169,7 @@ function userprofile($uid, $msg = 0, $plugin = '')
     $user_templates->set_var ('user_photo', $photo);
 
     $user_templates->set_var ('lang_membersince', $LANG04[67]);
-    $user_templates->set_var ('user_regdate', $A['regdate']);
+    $user_templates->set_var ('user_regdate', $A['regdate']);        
     $user_templates->set_var ('lang_email', $LANG04[5]);
     $user_templates->set_var ('user_id', $uid);
     $user_templates->set_var ('uid', $uid);
@@ -251,7 +251,6 @@ function userprofile($uid, $msg = 0, $plugin = '')
             $sidArray[] = $S['sid'];
         }
     }
-
     $sidList = implode("', '",$sidArray);
     $sidList = "'$sidList'";
 
@@ -265,8 +264,11 @@ function userprofile($uid, $msg = 0, $plugin = '')
     // }
     if (!empty ($sidList)) {
         $sql .= " HAVING sid in ($sidList)";
+
+
     }
     $sql .= " ORDER BY unixdate DESC LIMIT 10";
+
 
     $result = DB_query($sql);
     $nrows = DB_numRows($result);

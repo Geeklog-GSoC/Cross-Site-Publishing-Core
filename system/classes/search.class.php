@@ -585,9 +585,9 @@ class Search {
                                 LF_SOURCE_TITLE =>  $label,
                                 'title' =>        $col_title == -1 ? '<i>' . $LANG09[70] . '</i>' : $old_row[$col_title],
                                 'description' =>  $col_desc == -1 ? '<i>' . $LANG09[70] . '</i>' : $old_row[$col_desc],
-                                'date' =>         $col_date == -1 ? 'LF_NULL' : $date,
-                                'uid' =>          $col_user == -1 ? 'LF_NULL' : $old_row[$col_user],
-                                'hits' =>         $col_hits == -1 ? 'LF_NULL' : str_replace(',', '', $old_row[$col_hits])
+                                'date' =>         $col_date == -1 ? '&nbsp;' : $date,
+                                'uid' =>          $col_user == -1 ? '&nbsp;' : $old_row[$col_user],
+                                'hits' =>         $col_hits == -1 ? '0' : str_replace(',', '', $old_row[$col_hits])
                             );
                     preg_match('/href="([^"]+)"/i', $api_results['title'], $links);
                     $api_results['url'] = empty($links) ? '#' : $links[1];
@@ -614,12 +614,12 @@ class Search {
         if ($this->_keyType == 'any')
         {
             $searchQuery = str_replace(' ', "</b>' " . $LANG09[57] . " '<b>", $escquery);
-            $searchQuery = "'<b>$searchQuery</b>'";
+            $searchQuery = "<b>'$searchQuery'</b>";
         }
         else if ($this->_keyType == 'all')
         {
             $searchQuery = str_replace(' ', "</b>' " . $LANG09[56] . " '<b>", $escquery);
-            $searchQuery = "'<b>$searchQuery</b>'";
+            $searchQuery = "<b>'$searchQuery'</b>";
         }
         else
         {
@@ -911,7 +911,7 @@ class Search {
     *
     * @param   string  $haystack  string to search in
     * @param   string  $needle    string to search for
-    * @return  mixed              first pos of $needle in $haystack, or false
+    * @return  mixed              first pos of $needle in $haystack, or false 
     *
     */
     function _stripos($haystack, $needle)
