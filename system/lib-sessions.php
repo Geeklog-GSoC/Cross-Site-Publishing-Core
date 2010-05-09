@@ -8,7 +8,7 @@
 // |                                                                           |
 // | Geeklog session library.                                                  |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2000-2009 by the following authors:                         |
+// | Copyright (C) 2000-2010 by the following authors:                         |
 // |                                                                           |
 // | Authors: Tony Bibbs       - tony AT tonybibbs DOT com                     |
 // |          Mark Limburg     - mlimburg AT users DOT sourceforge DOT net     |
@@ -130,13 +130,30 @@ function SESS_sessionCheck()
                     $userid = COM_applyFilter ($userid, true);
                     $cookie_password = '';
                     $userpass = '';
-                    if ($userid > 1) {
+                    if (($userid > 1) &&
+                            isset($_COOKIE[$_CONF['cookie_password']])) {
                         $cookie_password = $_COOKIE[$_CONF['cookie_password']];
                         $userpass = DB_getItem ($_TABLES['users'], 'passwd',
                                                 "uid = $userid");
                     }
-                    if (empty ($cookie_password) || ($cookie_password <> $userpass)) {
-                        // User may have modified their UID in cookie, ignore them
+                    if (empty($cookie_password) || ($cookie_password <> $userpass)) {
+                        // Invalid or manipulated cookie data
+                        setcookie ($_CONF['cookie_session'], '', time() - 10000,
+                            $_CONF['cookie_path'], $_CONF['cookiedomain'],
+                            $_CONF['cookiesecure']);
+                        setcookie ($_CONF['cookie_password'], '', time() - 10000,
+                            $_CONF['cookie_path'], $_CONF['cookiedomain'],
+                            $_CONF['cookiesecure']);
+                        setcookie ($_CONF['cookie_name'], '', time() - 10000,
+                            $_CONF['cookie_path'], $_CONF['cookiedomain'],
+                            $_CONF['cookiesecure']);
+
+                        COM_clearSpeedlimit($_CONF['login_speedlimit'], 'login');
+                        if (COM_checkSpeedlimit('login', $_CONF['login_attempts']) > 0) {
+                            if (! defined('XHTML')) { define('XHTML', ''); }
+                            COM_displayMessageAndAbort(82, '', 403, 'Access denied');
+                        }
+                        COM_updateSpeedlimit('login');
                     } else if ($userid > 1) {
                         // Check user status
                         $status = SEC_checkUserStatus ($userid);
@@ -175,13 +192,30 @@ function SESS_sessionCheck()
                 $userid = COM_applyFilter ($userid, true);
                 $cookie_password = '';
                 $userpass = '';
-                if ($userid > 1) {
+                if (($userid > 1) && isset($_COOKIE[$_CONF['cookie_password']])) {
                     $userpass = DB_getItem ($_TABLES['users'], 'passwd',
                                             "uid = $userid");
                     $cookie_password = $_COOKIE[$_CONF['cookie_password']];
                 }
-                if (empty ($cookie_password) || ($cookie_password <> $userpass)) {
-                    // User could have modified UID in cookie, don't do shit
+                if (empty($cookie_password) || ($cookie_password <> $userpass)) {
+                    // Invalid or manipulated cookie data
+                    setcookie ($_CONF['cookie_session'], '', time() - 10000,
+                        $_CONF['cookie_path'], $_CONF['cookiedomain'],
+                        $_CONF['cookiesecure']);
+                    setcookie ($_CONF['cookie_password'], '', time() - 10000,
+                        $_CONF['cookie_path'], $_CONF['cookiedomain'],
+                        $_CONF['cookiesecure']);
+                    setcookie ($_CONF['cookie_name'], '', time() - 10000,
+                        $_CONF['cookie_path'], $_CONF['cookiedomain'],
+                        $_CONF['cookiesecure']);
+
+                    COM_clearSpeedlimit($_CONF['login_speedlimit'], 'login');
+                    if (COM_checkSpeedlimit('login', $_CONF['login_attempts']) > 0) {
+                        if (! defined('XHTML')) { define('XHTML', ''); }
+                        COM_displayMessageAndAbort(82, '', 403, 'Access denied')
+;
+                    }
+                    COM_updateSpeedlimit('login');
                 } else if ($userid > 1) {
                     // Check user status
                     $status = SEC_checkUserStatus($userid);
@@ -358,7 +392,7 @@ function SESS_getUserIdFromSession($sessid, $cookietime, $remote_ip, $md5_based=
     }
 
     if ($_SESS_VERBOSE) {
-        COM_errorLog("SQL in SESS_getUserIdFromSession is:\n $sql\n");
+        COM_errorLog("SQL in SESS_getUserIdFromSession is:\n $sql\n", 1);
     }
 
     $result = DB_query($sql);
@@ -440,11 +474,11 @@ function SESS_getUserData($username)
         . "{$_TABLES['userprefs']}.uid = {$_TABLES['users']}.uid AND username = '$username'";
 
     if(!$result = DB_query($sql)) {
-        COM_errorLog("error in get_userdata");
+        COM_errorLog("error in get_userdata", 1);
     }
 
     if(!$myrow = DB_fetchArray($result)) {
-        COM_errorLog("error in get_userdata");
+        COM_errorLog("error in get_userdata", 1);
     }
 
     return($myrow);
@@ -476,7 +510,12 @@ function SESS_getUserDataFromId($userid)
         $userdata = array("error" => "1");
         return ($userdata);
     }
-    return($myrow);
+
+    if (isset($myrow['passwd'])) {
+        unset($myrow['passwd']);
+    }
+
+    return $myrow;
 }
 
 ?>

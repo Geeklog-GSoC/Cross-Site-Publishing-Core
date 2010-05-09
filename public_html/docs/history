@@ -1,5 +1,16 @@
 Geeklog History/Changes:
 
+May 9, 2010 (1.5.2sr6)
+------------
+
+This release addresses the following security issue:
+
+The autologin (using the long-term session cookie) is vulnerable to dictionary
+attacks. This issue was originally reported by Bookoo of the Nine Situations
+Group in one of his reports in April 2009 but apparently overlooked by the
+Geeklog Team. Thanks to geeklog.net user Jack for pointing this out.
+
+
 Jul 30, 2009 (1.5.2sr5)
 ------------
 
