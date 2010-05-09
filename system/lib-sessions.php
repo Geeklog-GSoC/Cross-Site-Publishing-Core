@@ -8,7 +8,7 @@
 // |                                                                           |
 // | Geeklog session library.                                                  |
 // +---------------------------------------------------------------------------+
-// | Copyright (C) 2000-2009 by the following authors:                         |
+// | Copyright (C) 2000-2010 by the following authors:                         |
 // |                                                                           |
 // | Authors: Tony Bibbs       - tony AT tonybibbs DOT com                     |
 // |          Mark Limburg     - mlimburg AT users DOT sourceforge DOT net     |
@@ -137,7 +137,19 @@ function SESS_sessionCheck()
                                                "uid = $userid");
                     }
                     if (empty($cookie_password) || ($cookie_password <> $userpass)) {
-                        // User may have modified their UID in cookie, ignore them
+                        // Invalid or manipulated cookie data
+                        SEC_setCookie($_CONF['cookie_session'], '',
+                                      time() - 10000);
+                        SEC_setCookie($_CONF['cookie_password'], '',
+                                      time() - 10000);
+                        SEC_setCookie($_CONF['cookie_name'], '', time() - 10000);
+
+                        COM_clearSpeedlimit($_CONF['login_speedlimit'], 'login');
+                        if (COM_checkSpeedlimit('login', $_CONF['login_attempts']) > 0) {
+                            if (! defined('XHTML')) { define('XHTML', ''); }
+                            COM_displayMessageAndAbort(82, '', 403, 'Access denied');
+                        }
+                        COM_updateSpeedlimit('login');
                     } else if ($userid > 1) {
                         // Check user status
                         $status = SEC_checkUserStatus ($userid);
@@ -182,7 +194,17 @@ function SESS_sessionCheck()
                     $cookie_password = $_COOKIE[$_CONF['cookie_password']];
                 }
                 if (empty($cookie_password) || ($cookie_password <> $userpass)) {
-                    // User could have modified UID in cookie, don't do shit
+                    // Invalid or manipulated cookie data
+                    SEC_setCookie($_CONF['cookie_session'], '', time() - 10000);
+                    SEC_setCookie($_CONF['cookie_password'], '', time() - 10000);
+                    SEC_setCookie($_CONF['cookie_name'], '', time() - 10000);
+
+                    COM_clearSpeedlimit($_CONF['login_speedlimit'], 'login');
+                    if (COM_checkSpeedlimit('login', $_CONF['login_attempts']) > 0) {
+                        if (! defined('XHTML')) { define('XHTML', ''); }
+                        COM_displayMessageAndAbort(82, '', 403, 'Access denied');
+                    }
+                    COM_updateSpeedlimit('login');
                 } else if ($userid > 1) {
                     // Check user status
                     $status = SEC_checkUserStatus($userid);
@@ -279,7 +301,7 @@ function SESS_newSession($userid, $remote_ip, $lifespan, $md5_based=0)
     $result = DB_query($sql);
     if ($result) {
         if ($_CONF['lastlogin'] == true) {
-            // Update userinfo record to record the date and time as lastlogin
+            // Update userinfo record to record the date and time as lastlogin 
             DB_query("UPDATE {$_TABLES['userinfo']} SET lastlogin = UNIX_TIMESTAMP() WHERE uid=$userid");
         }
         if ($_SESS_VERBOSE) COM_errorLog("Assigned the following session id: $sessid",1);
@@ -359,7 +381,7 @@ function SESS_getUserIdFromSession($sessid, $cookietime, $remote_ip, $md5_based=
     }
 
     if ($_SESS_VERBOSE) {
-        COM_errorLog("SQL in SESS_getUserIdFromSession is:\n $sql\n");
+        COM_errorLog("SQL in SESS_getUserIdFromSession is:\n $sql\n", 1);
     }
 
     $result = DB_query($sql);
@@ -440,11 +462,11 @@ function SESS_getUserData($username)
         . "{$_TABLES['userprefs']}.uid = {$_TABLES['users']}.uid AND username = '$username'";
 
     if(!$result = DB_query($sql)) {
-        COM_errorLog("error in get_userdata");
+        COM_errorLog("error in get_userdata", 1);
     }
 
     if(!$myrow = DB_fetchArray($result)) {
-        COM_errorLog("error in get_userdata");
+        COM_errorLog("error in get_userdata", 1);
     }
 
     return($myrow);
