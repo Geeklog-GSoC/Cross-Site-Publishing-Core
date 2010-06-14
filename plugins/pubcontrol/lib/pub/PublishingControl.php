@@ -1213,6 +1213,30 @@ class TypeObject
      const O_INHERITED = 3;
      const O_SUSPENDED = 'S';
      const O_OK = 'Y';
+
+     /**
+      * Returns a type object or NULL on error
+      * @param  Int     $int        The integer to convert
+      * @return                     The Integer TypeObject
+      */
+     public static function makeTypeFromInteger($int)
+     {
+         switch($int) {
+             case 1:
+                 return TypeObject::O_PRIVATE;
+             case 2:
+                 return TypeObject::O_PUBLIC;
+             case 3:
+                 return TypeObject::O_INHERITED;
+             case 'S':
+                 return TypeObject::O_SUSPENDED;
+             case 'Y':
+                 return TypeObject::O_OK;
+             default:
+                return NULL;
+                 
+         }
+     }
 }
 
 

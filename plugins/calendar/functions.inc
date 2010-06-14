@@ -679,6 +679,13 @@ function plugin_getheadercode_calendar()
         $str = '<link rel="stylesheet" type="text/css" href="'
              . $_CONF['site_url'] . '/calendar/style.css"' . XHTML . '>';
     }
+    ##Todo: Remove hack
+    else if(substr_count ($_SERVER['PHP_SELF'], '/pubcontrol/') > 0) {
+        $str = '<link rel="stylesheet" type="text/css" href="'
+        . $_CONF['site_url'] . '/pubcontrol/style.css"' . XHTML . '>';
+        $str .= '<script type="text/javascript" src="'
+        . $_CONF['site_url'] . '/pubcontrol/pubcontrol.js"></script>';
+    }
 
     return $str;
 }

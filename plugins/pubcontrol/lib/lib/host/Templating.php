@@ -20,6 +20,7 @@ class TemplatingLayer
     public function __construct($dir, $file)
     {
         $this->_Template = new Template($dir);
+        $this->_Template->set_unknowns('keep');
         $this->_Template->set_file(array('index' => $file));
     }
 
