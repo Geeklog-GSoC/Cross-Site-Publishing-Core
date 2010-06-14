@@ -1,0 +1,33 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+Publishing Control Panel - Add New Group
+<br />
+<i>Groups are standard containers that hold multiple data feeds into one generic category, eg. Blogs</i>
+<br />
+<form name="PubControl_AddGroup" method="post" action="index.php?ret=group_modify" enctype="multipart/form-data" onsubmit="return ValidityCheck.modifyGroup();">
+
+<input type="hidden" name="GEEKLOG_PUBGEDIT" value="0" />
+
+<div class="smalltxt" id="GEEKLOG_PUPLOAD_ERRFORM" style="color:red"></div>
+
+<div class="smalltxt">Group Name<br /><i>The name of the group that everyone sees</i></div>
+<input class="long" maxlength="100" type="text" name="GEEKLOG_PUBGNAME" id="GEEKLOG_PUBGNAME" value="" />
+
+
+<div class="smalltxt">Group Type<br /><i>Public means any site can subscribe to it, private means that only sites that are approved by you can subscribe</i></div>
+<select class="pubcontrol" name="GEEKLOG_PUBGTYPE" id="GEEKLOG_PUBGTYPE">
+    <option value="1">Private</option>
+    <option value="2">Public</option>
+</select>
+
+<div class="smalltxt">Group Summary<br /><i>A short summary to describe the group and what feeds it contains</i></div>
+<textarea name="GEEKLOG_PUBGSUMMARY" id="GEEKLOG_PUBGSUMMARY" class="pubcontrol"></textarea>
+
+<div class="smalltxt"></div>
+<input class="pubcontrol" type="submit" name="submit_modify_group" value="Add Group" />&nbsp;&nbsp;<input class="pubcontrol" type="reset" name="reset_modify_group" value="Reset" />
+
+
+</form>
+<!-- End PubControl Manager -->

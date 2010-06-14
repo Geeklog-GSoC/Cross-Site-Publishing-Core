@@ -1,1 +1,102 @@
 *** dummy entry ***
+Mon Jun 14 11:51:58 2010 - 2 - require_once(/var/www/gsoc/gsoc-2010-tpatrick/system/lib-custom.php): failed to open stream: No such file or directory @ /var/www/gsoc/gsoc-2010-tpatrick/public_html/lib-common.php line 235 
+Mon Jun 14 11:52:27 2010 - 2 - require_once(/var/www/gsoc/gsoc-2010-tpatrick/system/lib-custom.php): failed to open stream: No such file or directory @ /var/www/gsoc/gsoc-2010-tpatrick/public_html/lib-common.php line 235 
+Mon Jun 14 11:52:34 2010 - 2 - require_once(/var/www/gsoc/gsoc-2010-tpatrick/system/lib-custom.php): failed to open stream: No such file or directory @ /var/www/gsoc/gsoc-2010-tpatrick/public_html/lib-common.php line 235 
+Mon Jun 14 11:52:37 2010 - 2 - require_once(/var/www/gsoc/gsoc-2010-tpatrick/system/lib-custom.php): failed to open stream: No such file or directory @ /var/www/gsoc/gsoc-2010-tpatrick/public_html/lib-common.php line 235 
+Mon Jun 14 11:54:08 2010 - Attempting to install the 'calendar' plugin 
+Mon Jun 14 11:54:08 2010 - Attempting to create 'Calendar Admin' group 
+Mon Jun 14 11:54:08 2010 - Attempting to add 'calendar' features 
+Mon Jun 14 11:54:08 2010 - Adding 'calendar.moderate' feature to the 'Calendar Admin' group 
+Mon Jun 14 11:54:08 2010 - Adding 'calendar.edit' feature to the 'Calendar Admin' group 
+Mon Jun 14 11:54:08 2010 - Adding 'calendar.submit' feature to the 'Calendar Admin' group 
+Mon Jun 14 11:54:08 2010 - Attempting to give all users in the Root group access to the 'calendar' Admin group 
+Mon Jun 14 11:54:08 2010 - Registering 'calendar' plugin 
+Mon Jun 14 11:54:08 2010 - Successfully installed the 'calendar' plugin! 
+Mon Jun 14 11:54:08 2010 - Attempting to install the 'links' plugin 
+Mon Jun 14 11:54:08 2010 - Attempting to create 'Links Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to add 'links' features 
+Mon Jun 14 11:54:09 2010 - Adding 'links.edit' feature to the 'Links Admin' group 
+Mon Jun 14 11:54:09 2010 - Adding 'links.moderate' feature to the 'Links Admin' group 
+Mon Jun 14 11:54:09 2010 - Adding 'links.submit' feature to the 'Links Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to give all users in the Root group access to the 'links' Admin group 
+Mon Jun 14 11:54:09 2010 - Registering 'links' plugin 
+Mon Jun 14 11:54:09 2010 - Successfully installed the 'links' plugin! 
+Mon Jun 14 11:54:09 2010 - Attempting to install the 'spamx' plugin 
+Mon Jun 14 11:54:09 2010 - Attempting to create 'spamx Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to add 'spamx' features 
+Mon Jun 14 11:54:09 2010 - Adding 'spamx.admin' feature to the 'spamx Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to give all users in the Root group access to the 'spamx' Admin group 
+Mon Jun 14 11:54:09 2010 - Inserting default data 
+Mon Jun 14 11:54:09 2010 - Registering 'spamx' plugin 
+Mon Jun 14 11:54:09 2010 - Successfully installed the 'spamx' plugin! 
+Mon Jun 14 11:54:09 2010 - Attempting to install the 'staticpages' plugin 
+Mon Jun 14 11:54:09 2010 - Attempting to create 'Static Page Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to add 'staticpages' features 
+Mon Jun 14 11:54:09 2010 - Adding 'staticpages.edit' feature to the 'Static Page Admin' group 
+Mon Jun 14 11:54:09 2010 - Adding 'staticpages.delete' feature to the 'Static Page Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to give all users in the Root group access to the 'staticpages' Admin group 
+Mon Jun 14 11:54:09 2010 - Registering 'staticpages' plugin 
+Mon Jun 14 11:54:09 2010 - Successfully installed the 'staticpages' plugin! 
+Mon Jun 14 11:54:09 2010 - Attempting to install the 'polls' plugin 
+Mon Jun 14 11:54:09 2010 - Attempting to create 'Polls Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to add 'polls' features 
+Mon Jun 14 11:54:09 2010 - Adding 'polls.edit' feature to the 'Polls Admin' group 
+Mon Jun 14 11:54:09 2010 - Attempting to give all users in the Root group access to the 'polls' Admin group 
+Mon Jun 14 11:54:09 2010 - Inserting default data 
+Mon Jun 14 11:54:09 2010 - Registering 'polls' plugin 
+Mon Jun 14 11:54:09 2010 - Successfully installed the 'polls' plugin! 
+Mon Jun 14 11:54:09 2010 - Attempting to install the 'xmlsitemap' plugin 
+Mon Jun 14 11:54:09 2010 - Attempting to add 'xmlsitemap' features 
+Mon Jun 14 11:54:09 2010 - Inserting default data 
+Mon Jun 14 11:54:09 2010 - Registering 'xmlsitemap' plugin 
+Mon Jun 14 11:54:09 2010 - Successfully installed the 'xmlsitemap' plugin! 
+Mon Jun 14 11:54:23 2010 - 2 - require_once(HTTP/Request.php): failed to open stream: No such file or directory @ /var/www/gsoc/gsoc-2010-tpatrick/system/classes/syndication/parserfactory.class.php line 31 
+Mon Jun 14 11:55:27 2010 - 2 - require_once(HTTP/Request.php): failed to open stream: No such file or directory @ /var/www/gsoc/gsoc-2010-tpatrick/system/classes/syndication/parserfactory.class.php line 31 
+Mon Jun 14 12:02:19 2010 - Attempting to install the 'calendar' plugin 
+Mon Jun 14 12:02:19 2010 - Attempting to create 'Calendar Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to add 'calendar' features 
+Mon Jun 14 12:02:19 2010 - Adding 'calendar.moderate' feature to the 'Calendar Admin' group 
+Mon Jun 14 12:02:19 2010 - Adding 'calendar.edit' feature to the 'Calendar Admin' group 
+Mon Jun 14 12:02:19 2010 - Adding 'calendar.submit' feature to the 'Calendar Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to give all users in the Root group access to the 'calendar' Admin group 
+Mon Jun 14 12:02:19 2010 - Registering 'calendar' plugin 
+Mon Jun 14 12:02:19 2010 - Successfully installed the 'calendar' plugin! 
+Mon Jun 14 12:02:19 2010 - Attempting to install the 'links' plugin 
+Mon Jun 14 12:02:19 2010 - Attempting to create 'Links Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to add 'links' features 
+Mon Jun 14 12:02:19 2010 - Adding 'links.edit' feature to the 'Links Admin' group 
+Mon Jun 14 12:02:19 2010 - Adding 'links.moderate' feature to the 'Links Admin' group 
+Mon Jun 14 12:02:19 2010 - Adding 'links.submit' feature to the 'Links Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to give all users in the Root group access to the 'links' Admin group 
+Mon Jun 14 12:02:19 2010 - Registering 'links' plugin 
+Mon Jun 14 12:02:19 2010 - Successfully installed the 'links' plugin! 
+Mon Jun 14 12:02:19 2010 - Attempting to install the 'spamx' plugin 
+Mon Jun 14 12:02:19 2010 - Attempting to create 'spamx Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to add 'spamx' features 
+Mon Jun 14 12:02:19 2010 - Adding 'spamx.admin' feature to the 'spamx Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to give all users in the Root group access to the 'spamx' Admin group 
+Mon Jun 14 12:02:19 2010 - Inserting default data 
+Mon Jun 14 12:02:19 2010 - Registering 'spamx' plugin 
+Mon Jun 14 12:02:19 2010 - Successfully installed the 'spamx' plugin! 
+Mon Jun 14 12:02:19 2010 - Attempting to install the 'staticpages' plugin 
+Mon Jun 14 12:02:19 2010 - Attempting to create 'Static Page Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to add 'staticpages' features 
+Mon Jun 14 12:02:19 2010 - Adding 'staticpages.edit' feature to the 'Static Page Admin' group 
+Mon Jun 14 12:02:19 2010 - Adding 'staticpages.delete' feature to the 'Static Page Admin' group 
+Mon Jun 14 12:02:19 2010 - Attempting to give all users in the Root group access to the 'staticpages' Admin group 
+Mon Jun 14 12:02:19 2010 - Registering 'staticpages' plugin 
+Mon Jun 14 12:02:19 2010 - Successfully installed the 'staticpages' plugin! 
+Mon Jun 14 12:02:19 2010 - Attempting to install the 'polls' plugin 
+Mon Jun 14 12:02:19 2010 - Attempting to create 'Polls Admin' group 
+Mon Jun 14 12:02:20 2010 - Attempting to add 'polls' features 
+Mon Jun 14 12:02:20 2010 - Adding 'polls.edit' feature to the 'Polls Admin' group 
+Mon Jun 14 12:02:20 2010 - Attempting to give all users in the Root group access to the 'polls' Admin group 
+Mon Jun 14 12:02:20 2010 - Inserting default data 
+Mon Jun 14 12:02:20 2010 - Registering 'polls' plugin 
+Mon Jun 14 12:02:20 2010 - Successfully installed the 'polls' plugin! 
+Mon Jun 14 12:02:20 2010 - Attempting to install the 'xmlsitemap' plugin 
+Mon Jun 14 12:02:20 2010 - Attempting to add 'xmlsitemap' features 
+Mon Jun 14 12:02:20 2010 - Inserting default data 
+Mon Jun 14 12:02:20 2010 - Registering 'xmlsitemap' plugin 
+Mon Jun 14 12:02:20 2010 - Successfully installed the 'xmlsitemap' plugin! 
+Mon Jun 14 15:36:30 2010 - 1064: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '(title, summary, type) VALUES('sdgsd','sdhsdh','2')' at line 1. SQL in question: INSERT INTO  (title, summary, type) VALUES('sdgsd','sdhsdh','2'); 
