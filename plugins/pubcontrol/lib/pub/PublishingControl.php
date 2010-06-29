@@ -85,7 +85,7 @@ class PublishingGroupControl
         }
 
         // Send connection
-        $sql = "DELETE FROM {$table} WHERE id = '{$groupid};";
+        $sql = "DELETE FROM {$table} WHERE id = '{$groupid}';";
         $conn->executeNonQuery($sql);
     }
 
@@ -140,6 +140,39 @@ class PublishingGroupControl
         $this->_CurrentLimit = 0;
         $this->_LimitLast = 0;
     }
+
+    /**
+     * Returns a GroupObject object with the group data in it that matches the specific group id
+     *
+     * @param   int     $groupid        The group id
+     * @return                          GroupObject or NULL
+     */
+    public function getGroupData($groupid)
+    {
+        // Declare Variables
+        $conn = new DAL();
+        $grp = NULL;
+        $table = DAL::getFormalTableName("pubcontrol_Groups");
+        $id = DAL::applyFilter($groupid, TRUE);
+
+        if($id === 0) {
+            return NULL;
+        }
+
+        $result = $conn->executeQuery("SELECT * FROM {$table} WHERE id = {$id};");
+                // Now attempt to loop over and populate objects
+        while ( ($row = $result->fetchAssoc()) !== NULL)
+        {
+            $grp = new GroupObject();
+            $grp->_Id = $row['id'];
+            $grp->_Title = $row['title'];
+            $grp->_Summary = $row['summary'];
+            $grp->_Type = $row['type'];
+        }
+
+        return $grp;
+    }
+
 
     /**
      * Returns an array of all the group items in the database
@@ -769,7 +802,13 @@ class PublishingSecurityManagement
         $securityid = DAL::applyFilter($securityid, true);
 
         // Make sure no subscribers are in the group
-        $num = $conn->count("pubcontrol_Subscribers", "security_id", $securityid);
+#        $num = $conn->count("pubcontrol_Subscribers", "security_id", $securityid);
+        $tbl = DAL::getFormalTableName("pubcontrol_SubscriberGroupLink");
+        $qstr = "SELECT COUNT(securitygroup_id) AS count FROM {$tbl} WHERE securitygroup_id = {$securityid};";
+        
+        $result = $conn->executeQuery($qstr);
+        $row = $result->fetchAssoc();
+        $num = (int)$row['count'];
 
         if($num > 0)
         {
@@ -813,6 +852,44 @@ class PublishingSecurityManagement
         $conn->executeNonQuery($sql);
         $ssid .= 'A'.$conn->getInsertId();
         return $ssid;
+    }
+
+    /**
+     * Returns a SecurityObject object with the group data in it that matches the specific group id or an Array of SecurityObjects
+     *
+     * @param   int     $groupid        (OPTIONAL)The group id - If present, just that SecurityObject is returned, else a list of all entries are
+     * @return                          SecurityObject or NULL
+     */
+    public function getSGroupData($groupid=0)
+    {
+        // Declare Variables
+        $conn = new DAL();
+        $grp = NULL;
+        $table = $this->_DBNAME;
+        $id = DAL::applyFilter($groupid, TRUE);
+        $d = array();
+
+        if($id === 0) {
+            $qstr = "SELECT * FROM {$table};";
+        }
+        else {
+            $qstr = "SELECT * FROM {$table} WHERE id = {$id};";
+        }
+
+        $result = $conn->executeQuery($qstr);
+
+        // Now attempt to loop over and populate objects
+        while ( ($row = $result->fetchAssoc()) !== NULL)
+        {
+            $grp = new SecurityObject();
+            $grp->_Id = $row['id'];
+            $grp->_Title = $row['title'];
+            $grp->_Summary = $row['summary'];
+            $grp->_Color = $row['color'];
+            $d[] = $grp;
+        }
+
+        return ($groupid !== 0) ? $d[0] : $d;
     }
 
 
@@ -861,6 +938,7 @@ class PublishingSecurityManagement
         }
 
         $table = DAL::getFormalTableName("pubcontrol_Subscribers");
+
         // The work of this method is two fold
         // First, it needs to get the id from the ssid
         $mixed = $this->_getRealSSID($ssid);
@@ -944,13 +1022,54 @@ class PublishingSecurityManagement
     {
         // Declare Variables
         $conn = $this->_Conn;
-        $securitygroupid = DAL::applyFilter($securitygroupid);
+        $securitygroupid = DAL::applyFilter($securitygroupid, TRUE);
         $feedid = DAL::applyFilter($feedid);
         $table = DAL::getFormalTableName("pubcontrol_SecurityGroupLink");
 
         // Add the feed
         $conn->executeNonQuery("INSERT INTO {$table} (securitygroup_id, feed_id) VALUES('{$securitygroupid}', '{$feedid}');");
         return $conn->getInsertId();
+    }
+
+    /**
+     * Removes a Link to security group with a feed
+     * @param int $securitygroupid
+     * @param String $feedid The feed id
+     * @throws PublishingException on serious error
+     */
+    public function unlinkToGroup($securitygroupid, $feedid)
+    {
+        // Declare Variables
+        $conn = $this->_Conn;
+        $securitygroupid = DAL::applyFilter($securitygroupid, TRUE);
+        $feedid = DAL::applyFilter($feedid);
+        $table = DAL::getFormalTableName("pubcontrol_SecurityGroupLink");
+
+        // Add the feed
+        $conn->executeNonQuery("DELETE FROM {$table} WHERE securitygroup_id = '{$securitygroupid}' AND feed_id = '{$feedid}';");
+    }
+
+    /**
+     * Returns an array of feed ids that are associated with the securitygroupid currently
+     * @param int $securitygroupid  The security group id to load for
+     * @return  Array(INT)  feed ids that are associated
+     */
+    public function getFeedsAssignedToGroup($securitygroupid)
+    {
+        // Declare Variables
+        $conn = $this->_Conn;
+        $securitygroupid = DAL::applyFilter($securitygroupid, TRUE);
+        $table = DAL::getFormalTableName("pubcontrol_SecurityGroupLink");
+        $array = array();
+        
+        // Create query
+        $result = $conn->executeQuery("SELECT feed_id FROM {$table} WHERE securitygroup_id = '{$securitygroupid}';");
+
+        while( ($row = $result->fetchAssoc()) !== NULL) {
+            $array[] = $row['feed_id'];
+        }
+
+        return $array;
     }
 
     /**
@@ -1017,10 +1136,11 @@ class PublishingControl
      * This could be the actual XML response or raw data response depending on what the command expects. Simply print the output of this method
      *
      * @param       Boolean                     If set to true, the contents will not be returned and instead printed. otherwise it will be returned as a string.
+     * @param       Boolean                     (Optional) If true, then all security checks are not performed for the feed data
      * @return      String                      The data or ' '
      * @throws      PublishingException         Invalid query string, fatal error
      */
-    public function doOperation($print=TRUE)
+    public function doOperation($print=TRUE, $bypasssecurity=FALSE)
     {
         // Declare Variables
         $sec = new PublishingSecurityManagement();
@@ -1040,11 +1160,14 @@ class PublishingControl
                     $feedid = (isset($_GET['id'])) ? $_GET['id'] : 0;
                     $ssid = (isset($_GET['ssid'])) ? $_GET['ssid'] : NULL;
 
-                    // Verify
-                    if($sec->verify($ssid, $feedid) === FALSE)
+                    if($bypasssecurity === FALSE)
                     {
-                        // Verification failed, they do not have the necessary permissions to view this content
-                        $buffer->write(":-1:");
+                        // Verify
+                        if($sec->verify($ssid, $feedid) === FALSE)
+                        {
+                            // Verification failed, they do not have the necessary permissions to view this content
+                            $buffer->write(":-1:");
+                        }
                     }
 
                     // Grab feed data
@@ -1237,6 +1360,30 @@ class TypeObject
                  
          }
      }
+
+     /**
+      * Returns the string name equivalent for an integer representing the type object
+      * @param <type> $int
+      * @return <type>
+      */
+     public static function getNameForInteger($int)
+     {
+          switch($int) {
+             case 1:
+                 return 12;
+             case 2:
+                 return 13;
+             case 3:
+                 return 16;
+             case 'S':
+                 return 17;
+             case 'Y':
+                 return 18;
+             default:
+                return 1;
+
+         }
+     }
 }
 
 
@@ -1379,6 +1526,59 @@ class GroupObject
         return true;
     }
 
+}
+
+/**
+ * Holds access code information
+ */
+class AccessCode
+{
+    /**
+     * The name of the access code (what it deals with)
+     * @var String
+     */
+    public $_Name = "";
+
+    /**
+     * The access code
+     * @var String
+     */
+    public $_AccessCode = "";
+}
+
+/**
+ * Provides methods for dealing with access codes
+ */
+class AccessCodeControl
+{
+    /**
+     * Returns a list of access codes that are currently available
+     */
+    public static function getAccessCodes()
+    {
+        // Declare Variables
+        $conn = new DAL();
+        $accesscodearray = array();
+        $arp = NULL;
+        $table = DAL::getFormalTableName("pubcontrol_Accesscodes");
+
+        // Make up query
+        $sql = "SELECT * FROM {$table};";
+
+        // Execute Query
+        $result = $conn->executeQuery($sql);
+
+        // And now populate data
+        while( ($row = $result->fetchAssoc()) !== NULL)
+        {
+            $arp = new AccessCode();
+            $arp->_Name = $row['name'];
+            $arp->_AccessCode = $row['access_code'];
+            $accesscodearray[] = $arp;
+        }
+
+        return $accesscodearray;
+    }
 }
 
 

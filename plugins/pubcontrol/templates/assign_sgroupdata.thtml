@@ -1,0 +1,21 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+{lang_5}
+<br />
+<i>{lang_52}</i>
+<br />
+<form name="PubControl_AddGroup" method="post" action="index.php?ret=sgroup_addfeed&id={id_0}" enctype="multipart/form-data">
+
+<div class="smalltxt">{lang_54}</div>
+<select name="GEEKLOG_PUBSFEED">
+{data_0}
+</select>
+
+<div class="smalltxt"></div>
+<input class="pubcontrol" type="submit" name="submit_modify_sgroup" value="{lang_53}" />
+
+
+</form>
+<!-- End PubControl Manager -->

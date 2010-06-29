@@ -1,0 +1,46 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+{lang_5}
+<br />
+<i>{lang_28}</i>
+<br />
+<form name="PubControl_AddGroup" method="post" action="index.php?ret=feed_modify" enctype="multipart/form-data" onsubmit="return ValidityCheck.modifyFeed();">
+
+<input type="hidden" name="GEEKLOG_PUBFEDIT" value="{hidden_0}" />
+
+<div class="smalltxt" id="GEEKLOG_PUPLOAD_ERRFORM" style="color:red"></div>
+
+<div class="smalltxt">{lang_29}</div>
+<input class="long" maxlength="100" type="text" name="GEEKLOG_PUBFNAME" id="GEEKLOG_PUBFNAME" value="{value_0}" />
+
+
+<div class="smalltxt">{lang_30}</div>
+<select class="pubcontrol" name="GEEKLOG_PUBFTYPE" id="GEEKLOG_PUBFTYPE">
+    <option value="{value_2}" selected="selected">{valang_0}</option>
+    <option value="1">{lang_12}</option>
+    <option value="2">{lang_13}</option>
+    <option value="3">{lang_16}</option>
+</select>
+
+<div class="smalltxt">{lang_33}</div>
+<select class="pubcontrol" name="GEEKLOG_PUBFACCESSCODE" id="GEEKLOG_PUBFACCESSCODE">
+    {value_4}
+</select>
+
+<div class="smalltxt">{lang_34}</div>
+<select class="pubcontrol" name="GEEKLOG_PUBFGROUP" id="GEEKLOG_PUBFGROUP">
+    {value_5}
+</select>
+
+
+<div class="smalltxt"{lang_31}</div>
+<textarea name="GEEKLOG_PUBFSUMMARY" id="GEEKLOG_PUBFSUMMARY" class="pubcontrol">{value_1}</textarea>
+
+<div class="smalltxt"></div>
+<input class="pubcontrol" type="submit" name="submit_modify_group" value="{lang_32}" />&nbsp;&nbsp;<input class="pubcontrol" type="reset" name="reset_modify_group" value="{lang_11}" />
+
+
+</form>
+<!-- End PubControl Manager -->
