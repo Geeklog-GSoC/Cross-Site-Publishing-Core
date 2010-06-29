@@ -2,12 +2,37 @@
 
 <br />
 
-Publishing Control Panel
+{lang_27}
 <br />
-- <i>Allows management of groups, feeds, and subscriptions</i>
+- <i>{lang_26}</i>
 
 <div class="bigload">
-    Add Entries
+    <b>{lang_25}</b>
+    <br /><br />
+    <a href="index.php?cmd=2">{lang_23}</a>
+    <br /><a href="index.php?cmd=4">{lang_22}</a>
+
+</div>
+
+<div class="bigload">
+    <b>{lang_43}</b>
+    <br /><br />
+    <a href="index.php?cmd=5">{lang_32}</a>
+    <br /><a href="index.php?cmd=7">{lang_36}</a>
+</div>
+
+<div class="bigload">
+    <b>{lang_50}</b>
+    <br /><br />
+    <a href="index.php?cmd=9">{lang_46}</a>
+    <br /><a href="index.php?cmd=10">{lang_49}</a>
+</div>
+
+<div class="bigload">
+    <b>{lang_57}</b>
+    <br /><br />
+    <a href="index.php?cmd=13">{lang_58}</a>
+    <br /><a href="index.php?cmd=14">{lang_59}</a>
 </div>
 
 <!-- End PubControl Manager -->

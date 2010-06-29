@@ -65,6 +65,7 @@ class DAL
      */
     public static function getFormalTableName($name)
     {
+        global $_TABLES;
         return (isset($_TABLES[$name])) ? $_TABLES[$name] : NULL;
     }
 

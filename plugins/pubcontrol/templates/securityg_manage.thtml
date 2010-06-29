@@ -1,0 +1,31 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+{lang_5}
+<br />
+<i>{lang_45}</i>
+<br />
+<form name="PubControl_AddGroup" method="post" action="index.php?ret=sgroup_modify" enctype="multipart/form-data" onsubmit="return ValidityCheck.modifySGroup();">
+
+<input type="hidden" name="GEEKLOG_PUBSEDIT" value="{hidden_0}" />
+
+<div class="smalltxt" id="GEEKLOG_PUPLOAD_ERRFORM" style="color:red"></div>
+
+<div class="smalltxt">{lang_7}</div>
+<input class="long" maxlength="100" type="text" name="GEEKLOG_PUBSNAME" id="GEEKLOG_PUBSNAME" value="{value_0}" />
+
+<div class="smalltxt"{lang_9}</div>
+<textarea name="GEEKLOG_PUBSSUMMARY" id="GEEKLOG_PUBSSUMMARY" class="pubcontrol">{value_1}</textarea>
+
+<!--
+<div class="smalltxt"></div>
+<input class="color" type="text" name="GEEKLOG_PUBSCOLOR" id="GEEKLOG_PUBSCOLOR" value={value_2}" />
+-->
+
+<div class="smalltxt"></div>
+<input class="pubcontrol" type="submit" name="submit_modify_sgroup" value="{lang_10}" />&nbsp;&nbsp;<input class="pubcontrol" type="reset" name="reset_modify_sgroup" value="{lang_11}" />
+
+
+</form>
+<!-- End PubControl Manager -->

@@ -685,6 +685,8 @@ function plugin_getheadercode_calendar()
         . $_CONF['site_url'] . '/pubcontrol/style.css"' . XHTML . '>';
         $str .= '<script type="text/javascript" src="'
         . $_CONF['site_url'] . '/pubcontrol/pubcontrol.js"></script>';
+#        $str .= '<script type="text/javascript" src="'
+#        . $_CONF['site_url'] . '/pubcontrol/jscolor.js"></script>';
     }
 
     return $str;
