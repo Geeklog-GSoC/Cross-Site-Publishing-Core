@@ -211,4 +211,138 @@ function ADMIN_getListField_listpubcontrol_sgroupfeed($fieldname, $fieldvalue, $
 
 }
 
+function ADMIN_getListField_listpubcontrol_submod($fieldname, $fieldvalue, $A, $icon_arr)
+{
+    global $_CONF, $LANG_PUBCONTROL_UPLUGIN, $_TABLES, $LANG_ACCESS, $LANG29;
+
+    $retval = '';
+    switch($fieldname) {
+        case 'url':
+            // Display URL
+            $retval = $A['url'];
+            break;
+        case 'delete':
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=subscriber_delete&id={$A['id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            break;
+        case 'approve':
+            $A['ssid'] = urlencode($A['ssid']);
+            $A['identifier'] = urlencode($A['identifier']);
+            $A['url'] = urlencode($A['url']);
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[64]}\", \"index.php?ret=subscriber_approve&id={$A['id']}&ssid={$A['ssid']}&email={$A['identifier']}&url={$A['url']}\");'>{$LANG29[1]}</a>";
+            break;
+        default:
+            $retval = $fieldvalue;
+            break;
+    }
+    return $retval;
+
+}
+
+function ADMIN_getListField_listpubcontrol_subnorm($fieldname, $fieldvalue, $A, $icon_arr)
+{
+    global $_CONF, $LANG_PUBCONTROL_UPLUGIN, $_TABLES, $LANG_ACCESS, $LANG29;
+
+    $retval = '';
+    switch($fieldname) {
+        case 'url':
+            // Display URL
+            $retval = $A['url'];
+            if($A['mode'] !== 'Y') {
+                $retval .= " (Suspended)";
+            }
+            break;
+        case 'ssid':
+            $ssid = wordwrap($A['ssid'], 50, '<br />');
+            $retval = "<a href='javascript:void();' onclick=\"alert('$ssid');\">{$LANG_PUBCONTROL_UPLUGIN[90]}</a>";
+            break;
+        case 'delete':
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=subscriber_delete&id={$A['id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            break;
+        case 'suspend':
+            if($A['mode'] === 'Y') {
+                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[66]}\", \"index.php?ret=subscriber_suspend&id={$A['id']}\");'>{$LANG_PUBCONTROL_UPLUGIN[65]}</a>";
+            }
+            else {
+                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[66]}\", \"index.php?ret=subscriber_unsuspend&id={$A['id']}\");'>{$LANG_PUBCONTROL_UPLUGIN[67]}</a>";
+            }
+            break;
+        case 'assign':
+            // Create edit tag
+            $retval = "<a href='index.php?cmd=15&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[68]}</a>";
+            break;
+        case 'assigned':
+            // Create edit tag
+            $retval = "<a href='index.php?cmd=16&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[70]}</a>";
+            break;
+        default:
+            $retval = $fieldvalue;
+            break;
+    }
+    return $retval;
+
+}
+
+// ADMIN_getListField_listpubcontrol_sgroupsub
+function ADMIN_getListField_listpubcontrol_sgroupsub($fieldname, $fieldvalue, $A, $icon_arr)
+{
+    global $_CONF, $LANG_PUBCONTROL_UPLUGIN, $_TABLES, $LANG_ACCESS;
+
+    $retval = '';
+    switch($fieldname) {
+        case 'title':
+            // Create edit tag
+            #$p = new PublishingFeedControl();
+            #$d = $p->listFeeds($A['feed_id'], TRUE);
+            #$retval = $d[0]->_Title;
+            $retval = $A['title'];
+            break;
+        case 'delete':
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=sgroupsub_delete&id={$A['securitygroup_id']}&fid={$A['subscriber_id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            break;
+        default:
+            $retval = $fieldvalue;
+            break;
+    }
+    return $retval;
+
+}
+
+#ADMIN_getListField_listrecvcontrol_Subscribers
+
+/**
+ * Receiving Control
+ */
+function ADMIN_getListField_listrecvcontrol_Subscribers($fieldname, $fieldvalue, $A, $icon_arr)
+{
+    global $_CONF, $LANG_PUBCONTROL_UPLUGIN, $_TABLES, $LANG_ACCESS, $LANG29;
+
+    $retval = '';
+    switch($fieldname) {
+        case 'url':
+            // Display URL
+            $retval = $A['url'];
+            break;
+        case 'ssid':
+            $ssid = wordwrap($A['ssid'], 50, '\n<br />');
+            $retval = "<a href='javascript:void();' onclick=\"alert('$ssid');\">{$LANG_PUBCONTROL_UPLUGIN[90]}</a>";
+            break;
+        case 'list':
+            $retval = "<a href='index.php?cmd=3&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[109]}</a>";
+            break;
+        case 'unsubscribe':
+            $url = urlencode($A['url']);
+            $ssid = urlencode($A['ssid']);
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[108]}\", \"recv.php?cmd=2&id={$A['id']}&ssid={$ssid}&url={$url}\");'>{$LANG_PUBCONTROL_UPLUGIN['107']}</a>";
+            break;
+        case 'type':
+            // Create edit tag
+            $retval = $LANG_PUBCONTROL_UPLUGIN[TypeObject::getNameForInteger($A['type'])];
+            break;
+        default:
+            $retval = $fieldvalue;
+            break;
+    }
+    return $retval;
+
+}
 ?>

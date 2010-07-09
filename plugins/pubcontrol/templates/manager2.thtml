@@ -1,0 +1,18 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+{lang_95}
+<br />
+- <i>{lang_95}</i>
+
+<div class="bigload">
+    <b>{lang_96}</b>
+    <br /><br />
+    <a href="index.php?cmd=2">{lang_23}</a>
+    <br /><a href="index.php?cmd=4">{lang_22}</a>
+
+</div>
+
+
+<!-- End PubControl Manager -->

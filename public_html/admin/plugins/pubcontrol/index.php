@@ -66,6 +66,9 @@ if(isset($_GET['cmd'])) {
     switch((int)$_GET['cmd']) {
         case 1:
             // Show options of what to do
+            $dal = new DAL();
+            $count_subs = $dal->count("pubcontrol_Subscribers", 'mode', 'A');
+            
             $temp = new TemplatingLayer($_CONF['path'] . 'plugins/pubcontrol/templates/', 'manager.thtml');
             $temp->set_var('lang_22', $LANG_PUBCONTROL_UPLUGIN[22]);
             $temp->set_var('lang_23', $LANG_PUBCONTROL_UPLUGIN[23]);
@@ -79,7 +82,7 @@ if(isset($_GET['cmd'])) {
             $temp->set_var('lang_49', $LANG_PUBCONTROL_UPLUGIN[49]);
             $temp->set_var('lang_50', $LANG_PUBCONTROL_UPLUGIN[50]);
             $temp->set_var('lang_57', $LANG_PUBCONTROL_UPLUGIN[57]);
-            $temp->set_var('lang_58', $LANG_PUBCONTROL_UPLUGIN[58]);
+            $temp->set_var('lang_58', "({$count_subs}) " . $LANG_PUBCONTROL_UPLUGIN[58] );
             $temp->set_var('lang_59', $LANG_PUBCONTROL_UPLUGIN[59]);
             
             $display .= $temp->parse_output();
@@ -543,6 +546,7 @@ if(isset($_GET['cmd'])) {
             $temp->set_var('lang_11', $LANG_PUBCONTROL_UPLUGIN[11]);
             $temp->set_var('lang_53', $LANG_PUBCONTROL_UPLUGIN[53]);
             $temp->set_var('data_0', $sel);
+            $temp->set_var('var_a', 'sgroup_addfeed');
             $temp->set_var('id_0', $id);
             
             $display .= $temp->parse_output();
@@ -618,6 +622,243 @@ if(isset($_GET['cmd'])) {
             $display .= $retval;
 
             break;
+        case 13:
+            // List all subscribers in the DB awaiting approval
+
+            $retval = '';
+            $header_arr = array( # display 'text' and use table field 'field'
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[60], 'field' => 'url', 'sort' => true),
+                array('text' => $LANG01[28], 'field' => 'delete', 'sort' => false),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[61], 'field' => 'approve', 'sort' => false),
+            );
+
+            $defsort_arr = array();
+
+            $menu_arr = array(
+                array(
+                        'url' => 'index.php?cmd=1', 'text' => $LANG01[68]
+                    ),
+                array(
+                        'url' => 'index.php?cmd=14', 'text' => $LANG_PUBCONTROL_UPLUGIN[62]
+                    )
+                );
+            $retval .= COM_startBlock($LANG_PUBCONTROL_UPLUGIN[63], '', COM_getBlockTemplate('_admin_block', 'header'));
+
+            $retval .= ADMIN_createMenu(
+                $menu_arr,
+                $LANG_PUBCONTROL_UPLUGIN[5],
+                $_CONF['layout_url'] . '/images/icons/plugins.' . $_IMAGE_TYPE
+            );
+
+            $text_arr = array(
+                'has_extras'   => true,
+                'instructions' => 'I can haz instructions!!',
+                'form_url'     => 'index.php?cmd=13'
+            );
+
+            $table = DAL::getFormalTableName("pubcontrol_Subscribers");
+
+#            if($id === 0) {
+                $qstr = "SELECT * FROM {$table} WHERE mode = 'A'";
+##            }
+
+            $query_arr = array(
+                'table' => 'pubcontrol_Subscribers',
+                'sql' => $qstr,
+                'query_fields' => array('url'),
+                'default_filter' => ''
+            );
+
+            // this is a dummy variable so we know the form has been used if all plugins
+            // should be disabled in order to disable the last one.
+            $form_arr = array('bottom' => '<input type="hidden" name="pluginenabler" value="true"' . XHTML . '>');
+
+            $retval .= ADMIN_list('pubcontrol_Subscribers', 'ADMIN_getListField_listpubcontrol_submod', $header_arr,
+                        $text_arr, $query_arr, $defsort_arr, '', $token, '', $form_arr, false);
+
+            $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
+
+            $display .= $retval;
+
+            break;
+        case 14:
+            // List all subscribers in the DB awaiting approval
+
+            $retval = '';
+            $header_arr = array( # display 'text' and use table field 'field'
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[60], 'field' => 'url', 'sort' => true),
+                array('text' => $LANG01[28], 'field' => 'delete', 'sort' => false),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[65] . ' / ' . $LANG_PUBCONTROL_UPLUGIN[67], 'field' => 'suspend', 'sort' => false),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[68], 'field' => 'assign', 'sort' => false),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[69], 'field' => 'assigned', 'sort' => false),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[76], 'field' => 'ssid', 'sort' => false)
+
+            );
+
+            $defsort_arr = array();
+
+            $menu_arr = array(
+                array(
+                        'url' => 'index.php?cmd=1', 'text' => $LANG01[68]
+                    ),
+                array(
+                        'url' => 'index.php?cmd=13', 'text' => $LANG_PUBCONTROL_UPLUGIN[63]
+                    )
+                );
+            $retval .= COM_startBlock($LANG_PUBCONTROL_UPLUGIN[62], '', COM_getBlockTemplate('_admin_block', 'header'));
+
+            $retval .= ADMIN_createMenu(
+                $menu_arr,
+                $LANG_PUBCONTROL_UPLUGIN[5],
+                $_CONF['layout_url'] . '/images/icons/plugins.' . $_IMAGE_TYPE
+            );
+
+            $text_arr = array(
+                'has_extras'   => true,
+                'instructions' => 'I can haz instructions!!',
+                'form_url'     => 'index.php?cmd=14'
+            );
+
+            $table = DAL::getFormalTableName("pubcontrol_Subscribers");
+
+#            if($id === 0) {
+                $qstr = "SELECT * FROM {$table} WHERE mode <> 'A'";
+##            }
+
+            $query_arr = array(
+                'table' => 'pubcontrol_Subscribers',
+                'sql' => $qstr,
+                'query_fields' => array('url'),
+                'default_filter' => ''
+            );
+
+            // this is a dummy variable so we know the form has been used if all plugins
+            // should be disabled in order to disable the last one.
+            $form_arr = array('bottom' => '<input type="hidden" name="pluginenabler" value="true"' . XHTML . '>');
+
+            $retval .= ADMIN_list('pubcontrol_Subscribers', 'ADMIN_getListField_listpubcontrol_subnorm', $header_arr,
+                        $text_arr, $query_arr, $defsort_arr, '', $token, '', $form_arr, false);
+
+            $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
+
+            $display .= $retval;
+
+            break;
+        case 15:
+            // Add feed to security group
+
+            $id = (int) isset($_GET['id']) ? $_GET['id'] : 0;
+
+            if($id === 0) {
+                header("Location: index.php?msg=15");
+                exit;
+            }
+
+            // Grab all feeds
+            $feedobj = new PublishingSecurityManagement();
+            $feeds = $feedobj->getSGroupData();
+
+            // Grab all feeds in use
+            $tp = new PublishingSecurityManagement();
+            $sfeeds = $tp->getGroupsAssignedToSubscriber($id);
+            foreach($feeds as $key => $value) {
+                foreach($sfeeds as $int) {
+                    if($value->_Id === $int) {
+                        unset($feeds[$key]);
+                        break;
+                    }
+                }
+            }
+
+            // Create the data variable
+            $sel = '';
+            foreach($feeds as $value) {
+                $sel .= "<option value='{$value->_Id}'>{$value->_Title}</option>";
+            }
+
+
+            $temp = new TemplatingLayer($_CONF['path']. 'plugins/pubcontrol/templates', 'assign_sgroupdata.thtml');
+            $temp->set_var('lang_5', $LANG_PUBCONTROL_UPLUGIN[5] . ' - '. $LANG_PUBCONTROL_UPLUGIN[71]);
+            $temp->set_var('lang_54', $LANG_PUBCONTROL_UPLUGIN[73]);
+            $temp->set_var('lang_52', $LANG_PUBCONTROL_UPLUGIN[72]);
+            $temp->set_var('lang_11', $LANG_PUBCONTROL_UPLUGIN[11]);
+            $temp->set_var('lang_53', $LANG_PUBCONTROL_UPLUGIN[74]);
+            $temp->set_var('data_0', $sel);
+            $temp->set_var('id_0', $id);
+            $temp->set_var('var_a', 'sub_addgroup');
+
+            $display .= $temp->parse_output();
+ 
+            break;
+       case 16:
+            // List feeds associated with the feeds
+
+            // See if there is an ID after all
+            $id = (int)HostInterface::GET('id', 0);
+
+            if($id === 0) {
+                header("Location: index.php?msg=15");
+                exit;
+            }
+
+            $retval = '';
+            $header_arr = array( # display 'text' and use table field 'field'
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[19], 'field' => 'title', 'sort' => false),
+                array('text' => $LANG_ACCESS['remove'], 'field' => 'delete', 'sort' => false)
+            );
+
+            $defsort_arr = array();
+
+            $menu_arr = array(
+                array(
+                        'url' => 'index.php?cmd=1', 'text' => $LANG01[68]
+                    ),
+                array(
+                        'url' => 'index.php?cmd=14', 'text' => $LANG_PUBCONTROL_UPLUGIN[59]
+                    )
+                );
+            
+            $retval .= COM_startBlock($LANG_PUBCONTROL_UPLUGIN[75], '', COM_getBlockTemplate('_admin_block', 'header'));
+
+            $retval .= ADMIN_createMenu(
+                $menu_arr,
+                $LANG_PUBCONTROL_UPLUGIN[5],
+                $_CONF['layout_url'] . '/images/icons/plugins.' . $_IMAGE_TYPE
+            );
+
+            $text_arr = array(
+                'has_extras'   => true,
+                'instructions' => 'I can haz instructions!!',
+                'form_url'     => 'index.php?cmd=16&id='.$id
+            );
+
+            $table = DAL::getFormalTableName("pubcontrol_SubscriberGroupLink");
+            $table2 = DAL::getFormalTableName("pubcontrol_Security");
+
+#            if($id === 0) {
+                $qstr = "SELECT securitygroup_id, subscriber_id, title FROM {$table}, {$table2} WHERE subscriber_id = '{$id}' AND securitygroup_id = id";
+##            }
+
+            $query_arr = array(
+                'table' => 'pubcontrol_SubscriberGroupLink',
+                'sql' => $qstr,
+                'query_fields' => array('securitygroup_id'),
+                'default_filter' => ''
+            );
+
+            // this is a dummy variable so we know the form has been used if all plugins
+            // should be disabled in order to disable the last one.
+            $form_arr = array('bottom' => '<input type="hidden" name="pluginenabler" value="true"' . XHTML . '>');
+
+            $retval .= ADMIN_list('pubcontrol_SecurityGroupLink', 'ADMIN_getListField_listpubcontrol_sgroupsub', $header_arr,
+                        $text_arr, $query_arr, $defsort_arr, '', $token, '', $form_arr, false);
+
+            $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
+
+            $display .= $retval;
+
+            break;
+
 
             // 100UP
         case CMD_GET_FEED_DATA: // 109
@@ -627,6 +868,9 @@ if(isset($_GET['cmd'])) {
             $p->parseQueryString();
             $display .= nl2br(htmlentities($p->doOperation(FALSE, TRUE), ENT_NOQUOTES));
             break;
+      default:
+          header("Location: index.php?cmd=1");
+          exit;
 
     }
 
@@ -849,8 +1093,123 @@ else if(isset($_GET['ret']))
             $p->linkToGroup($securityid, $feedid);
             header("Location: index.php?cmd=10&msg=4");
             break;
+        case "subscriber_delete":
+            // Deletes a group from the idf
+            // Attempt to get the id
+            $id = DAL::applyFilter(HostInterface::GET('id', 0), true);
 
+            // Invalid identifier
+            if($id === 0) {
+                header("Location: index.php?cmd=14&msg=15");
+                exit;
+            }
+
+            // Attempt to delete
+            $se = new PublishingSecurityManagement();
+            $se->deleteSubscriber($id);
+
+            header("Location: index.php?cmd=14&msg=4");
+            break;
+        case "subscriber_unsuspend":
+            // Deletes a group from the idf
+            // Attempt to get the id
+            $id = DAL::applyFilter(HostInterface::GET('id', 0), true);
+
+            // Invalid identifier
+            if($id === 0) {
+                header("Location: index.php?cmd=14&msg=15");
+                exit;
+            }
+
+            // Attempt to delete
+            $se = new PublishingSecurityManagement();
+            $se->modifySubscriberState(TypeObject::O_OK, $id, TRUE);
+
+            header("Location: index.php?cmd=14&msg=4");
+            break;
+            // approveSubscriber($email, $ssid, $id)
+        case "subscriber_approve":
+            // Deletes a group from the idf
+            // Attempt to get the id
+            $id = DAL::applyFilter(HostInterface::GET('id', 0), true);
+            $ssid = HostInterface::GET('ssid', '');
+            $email = HostInterface::GET('email', '');
+            $url = HostInterface::GET('url', '');
+
+            // Invalid identifier
+            if( ($id === 0) || ($ssid == '') || ($email == '') || ($url == '')) {
+                header("Location: index.php?cmd=14&msg=15");
+                exit;
+            }
+
+            // Attempt to delete
+            $se = new PublishingSecurityManagement();
+            $se->approveSubscriber($email, $ssid, $id, $url);
+            $se->modifySubscriberState(TypeObject::O_OK, $id, TRUE);
+            header("Location: index.php?cmd=14&msg=4");
+            break;
+        case "subscriber_suspend":
+            // Deletes a group from the idf
+            // Attempt to get the id
+            $id = DAL::applyFilter(HostInterface::GET('id', 0), true);
+
+            // Invalid identifier
+            if($id === 0) {
+                header("Location: index.php?cmd=14&msg=15");
+                exit;
+            }
+
+            // Attempt to delete
+            $se = new PublishingSecurityManagement();
+            $se->modifySubscriberState(TypeObject::O_SUSPENDED, $id, TRUE);
+
+            header("Location: index.php?cmd=14&msg=4");
+            break;
+//sub_addgroup
+        case "sub_addgroup":
+            // Add a feed to the group
+            $feedid = (int)HostInterface::POST('GEEKLOG_PUBSFEED', 0);
+            $securityid = (int)HostInterface::GET('id', 0);
+
+            // Did it work?
+            if( ($feedid === 0) || ($securityid === 0)) {
+                header("Location: index.php?cmd=10&msg=15");
+                exit;
+            }
+
+            // And now attempt to add it
+            $p = new PublishingSecurityManagement();
+            $p->linkToSubscriber($feedid, $securityid);
+            header("Location: index.php?cmd=14&msg=4");
+            break;
+//sgroupsub_delete
+        case "sgroupsub_delete":
+            // Deletes a group from the idf
+            // Attempt to get the id
+            $id = DAL::applyFilter(HostInterface::GET('id', 0), true);
+            $fid = DAL::applyFilter(HostInterface::GET('fid', 0), true);
+
+            // Invalid identifier
+            if( ($id === 0) || ($fid === 0)) {
+                header("Location: index.php?cmd=10&msg=15");
+                exit;
+            }
+
+            // Attempt to delete
+            $se = new PublishingSecurityManagement();
+            $se->unlinkToSubscriber($id, $fid);
+
+            header("Location: index.php?cmd=16&id=$id&msg=4");
+            break;
+      default:
+          header("Location: index.php?cmd=1");
+          exit;
+            
     }
+}
+else {
+    header("Location: index.php?cmd=1");
+    exit;
 }
 
 
