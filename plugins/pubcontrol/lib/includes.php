@@ -9,6 +9,7 @@ require $include_path . 'lib/lib/host/Templating.php';
 require $include_path . 'lib/lib/sys/Buffering.php';
 require $include_path . 'lib/exceptions/PublishingException.php';
 require $include_path . 'lib/pub/PublishingControl.php';
+require $include_path . 'lib/pub/ReceivingControl.php';
 
 
 ?>

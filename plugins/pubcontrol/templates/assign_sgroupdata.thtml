@@ -6,7 +6,7 @@
 <br />
 <i>{lang_52}</i>
 <br />
-<form name="PubControl_AddGroup" method="post" action="index.php?ret=sgroup_addfeed&id={id_0}" enctype="multipart/form-data">
+<form name="PubControl_AddGroup" method="post" action="index.php?ret={var_a}&id={id_0}" enctype="multipart/form-data">
 
 <div class="smalltxt">{lang_54}</div>
 <select name="GEEKLOG_PUBSFEED">

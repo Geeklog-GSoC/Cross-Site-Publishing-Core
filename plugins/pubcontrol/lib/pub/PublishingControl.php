@@ -17,6 +17,7 @@ define("CMD_GET_FEED_DATA", 109);
 define("CMD_LIST_FEEDS", 110);
 define("CMD_LIST_GROUPS", 111);
 define("CMD_SUBSCRIBE", 112);
+define("CMD_PUBREPO", 113);
 
 /**
  * For the methods that interact with the management of the group objects
@@ -647,30 +648,39 @@ class PublishingSecurityManagement
     /**
      * Breaks up the SSID into its parts and returns an associative array with them
      * 
-     * @param       String $ssid            The SSID to
+     * @param       String  $ssid            The SSID to
+     * @param       Boolean $ignorehash      Ignores the ID requirement on the ssid
      * @return      Mixed                   Associative array [ URL, IDENTIFIER, PIN, ID, SSID ]
      * @throws      PublishingException     on serious error
      */
-    private function _getRealSSID($ssid)
+    private function _getRealSSID($ssid, $ignorehash=False)
     {
         // Decouple the hash (always the last A)
-        $pos = strrpos($ssid, 'A');
         $mixed = array();
+
+        if($ignorehash === FALSE) {
+            $pos = strrpos($ssid, 'A');
         
-        if($pos === FALSE)
-        {
-            throw new PublishingException("Invalid SSID format passed");
+            if($pos === FALSE)
+            {
+                throw new PublishingException("Invalid SSID format passed");
+            }
+
+            // Split the string on that location
+            $ssid2 = substr($ssid, 0, $pos);
+            $idl = substr($ssid, $pos);
+            $idl = substr($idl, 1);
+        }
+        else {
+            $ssid2 = $ssid;
+            $idl = 0;
         }
 
-        // Split the string on that location
-        $ssid2 = substr($ssid, 0, $pos);
-        $idl = substr($ssid, $pos);
-        
         $mixed['SSID'] = $ssid2;
         
         // And now decode the data
         // urlencode(base64_encode('%' . $url . '%' . $identifier . '%' . $pin . '#' . md5($url . 'D' . $identifier . 'E' . $pin . 'F')));
-        $ssid2 = urldecode(base64_decode($ssid2));
+        $ssid2 = base64_decode(urldecode($ssid2));
 
         // Explode the string on the identifers to relate it
         $exp = explode("#", $ssid2);
@@ -700,11 +710,11 @@ class PublishingSecurityManagement
         // Grab the data
         $mixed = $this->_getRealSSID($ssid);
         $ssid = DAL::applyFilter($mixed['SSID']);
-
-        $result = $conn->executeQuery("SELECT state FROM {$table} WHERE ssid = '{$ssid}';");
+        
+        $result = $conn->executeQuery("SELECT mode FROM {$table} WHERE ssid = '{$ssid}';");
         $row = $result->fetchAssoc();
 
-        if( ($row === NULL) || ($row['state'] !== 'Y'))
+        if( ($row === NULL) || ($row['mode'] !== 'Y'))
         {
             return false;
         }
@@ -831,7 +841,7 @@ class PublishingSecurityManagement
      * @return String ssid The unique identifier for the subscription instance
      * @throws PublishingException on serious error
      */
-    public function subscribe($url, $identifier, $pin)
+    public function subscribe($url, $identifier, $pin, $t=TypeObject::O_AWAITINGAPPROVAL)
     {
         // Declare Variables
         $conn = $this->_Conn;
@@ -847,8 +857,7 @@ class PublishingSecurityManagement
         $identifier = DAL::applyFilter($identifier);
         $pin = DAL::applyFilter($pin);
         $table = DAL::getFormalTableName("pubcontrol_Subscribers");
-        
-        $sql = "INSERT INTO {$table} (url, identifier, pin, ssid) VALUES('{$url}','{$identifier}','{$pin}', '{$ssid}');";
+        $sql = "INSERT INTO {$table} (url, identifier, pin, ssid, mode) VALUES('{$url}','{$identifier}','{$pin}', '{$ssid}', '{$t}');";
         $conn->executeNonQuery($sql);
         $ssid .= 'A'.$conn->getInsertId();
         return $ssid;
@@ -866,9 +875,9 @@ class PublishingSecurityManagement
         $conn = new DAL();
         $grp = NULL;
         $table = $this->_DBNAME;
-        $id = DAL::applyFilter($groupid, TRUE);
+        $id = (int)DAL::applyFilter($groupid, TRUE);
         $d = array();
-
+        
         if($id === 0) {
             $qstr = "SELECT * FROM {$table};";
         }
@@ -904,14 +913,32 @@ class PublishingSecurityManagement
         // Declare Variables
         $conn = $this->_Conn;
         $table = DAL::getFormalTableName("pubcontrol_Subscribers");
+        $table2 = DAL::getFormalTableName("pubcontrol_SubscriberGroupLink");
         
         // Get the ssid
-        $mixed = $this->_getRealSSID($ssid);
+        $mixed = $this->_getRealSSID($ssid, TRUE);
         $ssid = DAL::applyFilter($mixed['SSID']);
-
+        $id = DAL::applyFilter($mixed['ID'], TRUE);
         // Remove from database
         $conn->executeNonQuery("DELETE FROM {$table} WHERE ssid = '{$ssid}';");
-        
+        $conn->executeNonQuery("DELETE FROM {$table2} WHERE subscriber_id = '{$id}';");
+    }
+
+    /**
+     * Unsubsbribes a user
+     * @param <type> $id
+     */
+    public function deleteSubscriber($id)
+    {
+        // Declare Variables
+        $conn = $this->_Conn;
+        $table = DAL::getFormalTableName("pubcontrol_Subscribers");
+
+        // Get the ssid
+        $id = DAL::applyFilter($id, TRUE);
+
+        // Remove from database
+        $conn->executeNonQuery("DELETE FROM {$table} WHERE id = '{$id}';");
     }
     
     /**
@@ -990,26 +1017,37 @@ class PublishingSecurityManagement
      * @param String $ssid The security id
      * @throws PublishingException on serious error
      */
-    public function linkToSubscriber($securitygroupid, $ssid)
+    public function linkToSubscriber($securitygroupid, $subid)
     {
         // Declare Variables
         $conn = $this->_Conn;
         $securitygroupid = DAL::applyFilter($securitygroupid);
         $table = DAL::getFormalTableName("pubcontrol_SubscriberGroupLink");
         
-        // Is ita valid subscriber
-        if($this->_ssidValid($ssid) === FALSE)
-        {
-            throw new PublishingException("Invalid ssid");
-        }
-
         // Valid, get id for data
-        $mixed = $this->_getRealSSID($ssid);
-        $id = DAL::applyFilter($mixed['ID'], true);
+        $id = DAL::applyFilter($subid, true);
 
         // Add the subscriber
         $conn->executeNonQuery("INSERT INTO {$table} (securitygroup_id, subscriber_id) VALUES('{$securitygroupid}', '{$id}');");
         return $conn->getInsertId();
+    }
+
+    /**
+     * Removes a Link to security group with a subscriber
+     * @param int $securitygroupid
+     * @param String $subid The subscriber id
+     * @throws PublishingException on serious error
+     */
+    public function unlinkToSubscriber($securitygroupid, $subid)
+    {
+        // Declare Variables
+        $conn = $this->_Conn;
+        $securitygroupid = DAL::applyFilter($securitygroupid, TRUE);
+        $subid = DAL::applyFilter($subid, TRUE);
+        $table = DAL::getFormalTableName("pubcontrol_SubscriberGroupLink");
+
+        // Add the feed
+        $conn->executeNonQuery("DELETE FROM {$table} WHERE securitygroup_id = '{$securitygroupid}' AND subscriber_id = '{$subid}';");
     }
 
     /**
@@ -1073,31 +1111,165 @@ class PublishingSecurityManagement
     }
 
     /**
+     * Simple wrapper around private method _getRealSSID($ssid)
+     * @param <type> $ssid The SSID
+     */
+    public function getSSIDParts($ssid)
+    {
+        return $this->_getRealSSID($ssid, TRUE);
+    }
+
+    /**
+     * Returns an array of security group ids that are associated with the securitygroupid currently
+     * @param int $id  The group subscriber id to load for
+     * @return  Array(INT)  int of ids
+     */
+    public function getGroupsAssignedToSubscriber($id)
+    {
+        // Declare Variables
+        $conn = $this->_Conn;
+        $id = DAL::applyFilter($id, TRUE);
+        $table = DAL::getFormalTableName("pubcontrol_SubscriberGroupLink");
+        $array = array();
+
+        // Create query
+        $result = $conn->executeQuery("SELECT securitygroup_id FROM {$table} WHERE subscriber_id = '{$id}';");
+
+        while( ($row = $result->fetchAssoc()) !== NULL) {
+            $array[] = $row['securitygroup_id'];
+        }
+
+        return $array;
+    }
+
+
+    /**
      * Modifies the subscriber state
      *
-     * @param       Int             The state, use one of the constants -> TypeObject.O_SUSPENDED or TypeObject.O_OK
+     * @param       Int             The state, use one of the constants -> TypeObject.O_SUSPENDED or TypeObject.O_OK or O_AWAITINGAPPROVAL
      * @param       String          SSID
      */
-    public function modifySubscriberState($state, $ssid)
+    public function modifySubscriberState($state, $ssid, $nid=FALSE)
     {
         // Declare Variables
         $conn = $this->_Conn;
         $table = DAL::getFormalTableName("pubcontrol_Subscribers");
-
-        // Is ita valid subscriber
-        if($this->_ssidValid($ssid) === FALSE)
-        {
-            throw new PublishingException("Invalid ssid");
-        }
-
-        // Valid, get id for data
-        $mixed = $this->_getRealSSID($ssid);
-        $ssid = DAL::applyFilter($mixed['SSID']);
         $state = DAL::applyFilter($state);
         
+        if($nid === FALSE) {
+            // Is ita valid subscriber
+            if($this->_ssidValid($ssid) === FALSE)
+            {
+                throw new PublishingException("Invalid ssid");
+            }
+
+            // Valid, get id for data
+            $mixed = $this->_getRealSSID($ssid);
+            $ssid = DAL::applyFilter($mixed['SSID']);
+            $sql = "UPDATE {$table} SET mode = '{$state}' WHERE ssid='{$ssid}';";
+        }
+        else {
+            $id = DAL::applyFilter($ssid, TRUE);
+            $sql = "UPDATE {$table} SET mode = '{$state}' WHERE id='{$id}';";
+        }
+  
         // What state is it
-        $conn->executeNonQuery("UPDATE {$table} SET state = '{$state}' WHERE ssid='{$ssid}';");
+        $conn->executeNonQuery($sql);
         return $conn->getInsertId();
+    }
+
+    /**
+     * Mails an attachment
+     * @param <type> $name  The name of the file
+     * @param <type> $data Data
+     * @param <type> $mailto
+     * @param <type> $from_mail
+     * @param <type> $from_name
+     * @param <type> $replyto
+     * @param <type> $subject
+     * @param <type> $message
+     */
+    private function mail_attachment($name, $data, $mailto, $from_mail, $from_name, $replyto, $subject, $message)
+    {
+        // Create the content
+        $content = chunk_split(base64_encode($data));
+        $uid = md5(uniqid(time()));
+        $header = "From: ".$from_name." <".$from_mail.">\r\n";
+        $header .= "Reply-To: ".$replyto."\r\n";
+        $header .= "MIME-Version: 1.0\r\n";
+        $header .= "Content-Type: multipart/mixed; boundary=\"".$uid."\"\r\n\r\n";
+        $header .= "This is a multi-part message in MIME format.\r\n";
+        $header .= "--".$uid."\r\n";
+        $header .= "Content-type:text/plain; charset=iso-8859-1\r\n";
+        $header .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+        $header .= $message."\r\n\r\n";
+        $header .= "--".$uid."\r\n";
+        $header .= "Content-Type: application/octet-stream; name=\"".$name."\"\r\n"; // use different content types here
+        $header .= "Content-Transfer-Encoding: base64\r\n";
+        $header .= "Content-Disposition: attachment; filename=\"".$name."\"\r\n\r\n";
+        $header .= $content."\r\n\r\n";
+        $header .= "--".$uid."--";
+        mail($mailto, $subject, "", $header);
+#        if (mail($mailto, $subject, "", $header)) {
+    }
+
+    /**
+     * Returns the public subscription bitcode
+     *
+     * @return String       The encoded link string
+     */
+    public function getPublicSubscriptionLink()
+    {
+        global $_CONF;
+        
+        return base64_encode("{$_CONF['site_url']}");
+    }
+
+    /**
+     * Approves a subscriber awaiting approval
+     * - Emails the user with the SSID
+     * - Sets the mode to approved
+     *
+     * @param   String      email       The email to send to
+     * @param   String      ssid        The SSID
+     * @param   Integer     id          The id of the subscriber
+     * @param   String      url         The URL to access
+     */
+    public function approveSubscriber($email, $ssid, $id, $url)
+    {
+        // Declare Variables
+        global $_CONF;
+        
+        $email = DAL::applyFilter($email);
+        $ssid = DAL::applyFilter($ssid);
+        $id = (int)DAL::applyFilter($id, TRUE);
+        $headers = "From: {$_CONF['site_mail']}\r\nReply-To: {$_CONF['site_mail']}";
+        $headers .= "\r\nContent-Type: multipart/mixed; boundary=\"PHP-mixed-".$random_hash."\"";
+        $date = date('r', time());
+        $file = base64_encode("{$ssid}?{$_CONF['site_url']}?{$date}?");
+        // Read attachment daa into chunks
+        // 
+        // Send out the email
+        $message = <<<NESS
+<b>{$_CONF['site_name']} Publishing Control Subscription Approval</b>
+<br /><br />
+Your application to apply to subscription site `{$_CONF['site_url']}` has been approved!
+<br />
+<br />
+Click below to finish the subscription process
+<br />
+<br />
+<a href="{$url}/admin/plugins/pubcontrol/recv.php?cmd=49&t={$file}">Subscribe</a>
+<br />
+<br />
+Thanks - {$_CONF['site_name']} admin
+NESS;
+    
+    COM_mail($email, "{$_CONF['site_name']} Publishing Control Subscription Activated", $message, $_CONF['site_mail'], TRUE);
+    #$this->mail_attachment("ssid.pcb", $file, $email, $_CONF['site_mail'], $from_name, $_CONF['site_mail'], "{$_CONF['site_name']} Publishing Control Subscription Activated", $message);
+    #mail($email, "{$_CONF['site_name']} Publishing Control Subscription Activated", $message, $headers);
+
+    
     }
 }
 
@@ -1167,6 +1339,7 @@ class PublishingControl
                         {
                             // Verification failed, they do not have the necessary permissions to view this content
                             $buffer->write(":-1:");
+                            return;
                         }
                     }
 
@@ -1302,18 +1475,21 @@ class PublishingControl
                     $buffer->write("</feed>");
                     return $buffer->getOutput();
                 case CMD_SUBSCRIBE:
-                    // Subscribe to the database
+                    // UnSubscribe to the database
                     // Grab url, identifier
-                    $url = (isset($_GET['url'])) ?  $_GET['url'] : NULL;
-                    $iden = (isset($_GET['iden'])) ? $_GET['iden'] : NULL;
-
-                    if( ($url === NULL) || ($iden === NULL))
+                    $ssid = (isset($_GET['ssid'])) ? $_GET['ssid'] : NULL;
+                    $redir = (isset($_GET['redir'])) ? $_GET['redir'] : NULL;;
+                    
+                    if($ssid === NULL)
                     {
-                        $buffer->write(":-3:");
+                        header("Location: {$redir}?msg=104");
+                        exit;
                     }
 
                     // $var = 10; Foo:()&(%~!!$var)
-                    
+                    $f = new PublishingSecurityManagement();
+                    $f->unsubscribe($ssid);
+                    header("Location: {$redir}?msg=105");
                     break;
             }
         }
@@ -1336,6 +1512,7 @@ class TypeObject
      const O_INHERITED = 3;
      const O_SUSPENDED = 'S';
      const O_OK = 'Y';
+     const O_AWAITINGAPPROVAL = 'A';
 
      /**
       * Returns a type object or NULL on error
@@ -1657,5 +1834,13 @@ class DataObject
     }
 
 }
+
+
+
+/****
+ * Receiving Control Panel -> Provides
+ *
+ *
+ */
 
 ?>

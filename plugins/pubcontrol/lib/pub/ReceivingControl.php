@@ -10,15 +10,15 @@
 
 
 /**
- * Controls the access of data associated with topics, feeds, or access codes
+ * Controls the access of data associated with topics, feeds, or access codes, as well as manipulating subscriptions
  */
-class ReceivingControlData
+class ReceivingControlManagement
 {
 
     // Private Methods
     private $_Conn = NULL;
     private $_DBNAME = NULL;
-
+    
     public function __construct()
     {
         $this->_Conn = new DAL();
@@ -29,6 +29,58 @@ class ReceivingControlData
     {
         $this->_Conn->cleanup();
     }
+
+    /**
+     * Finishes a valid private subscription
+     *
+     * @param   String      $ssid       The security identifier that has been issued
+     * @param   String      $url        The URL that the security identifier is used for
+     * @return  Boolean                 On success TRUE, false means that it already exists in the DB
+     */
+    public function finishPrivateSubscription($ssid, $url)
+    {
+        // Declare Variables
+        $table = DAL::getFormalTableName("recvcontrol_Subscriptions");
+        $ssid = DAL::applyFilter($ssid);
+        $url = DAL::applyFilter($url);
+        $conn = $this->_Conn;
+
+        // Check if already exists
+        $sql = "SELECT type FROM {$table} WHERE ssid = '{$ssid}' AND url = '{$url}';";
+        $result = $conn->executeQuery($sql);
+        $row = $result->fetchAssoc();
+        if($row !== NULL) {
+            return FALSE;
+        }
+
+        // Create query
+        $sql = "INSERT INTO {$table} (ssid, identifier, url, type) VALUES('{$ssid}','','{$url}','1');";
+        $conn->executeNonQuery($sql);
+
+        return TRUE;
+    }
+
+    /**
+     * Unsubscribes a site from the application
+     *
+     * @param   int     $id     The id of the subscription
+     */
+    public function unSubscribe($id)
+    {
+        $conn = $this->_Conn;
+        $table = DAL::getFormalTableName("recvcontrol_Subscriptions");
+        $id = DAL::applyFilter($id);
+        $table2 = DAL::getFormalTableName("recvcontrol_Feeds");
+        
+        // Delete Feeds
+        $sql = "DELETE FROM {$table2} WHERE subscription_id = '{$id}';";
+        $conn->executeNonQuery($sql);
+        
+        // Delete Subscriber
+        $sql = "DELETE FROM {$table} WHERE id = '{$id}';";
+        $conn->executeNonQuery($sql);
+    }
+
 
     /**
      * Attempts to subscribe a URL to a specific site and load the feed information into the list
