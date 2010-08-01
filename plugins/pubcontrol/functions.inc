@@ -323,16 +323,26 @@ function ADMIN_getListField_listrecvcontrol_Subscribers($fieldname, $fieldvalue,
             $retval = $A['url'];
             break;
         case 'ssid':
-            $ssid = wordwrap($A['ssid'], 50, '\n<br />');
-            $retval = "<a href='javascript:void();' onclick=\"alert('$ssid');\">{$LANG_PUBCONTROL_UPLUGIN[90]}</a>";
+            if($A['type'] == TypeObject::O_PRIVATE) {
+                $ssid = wordwrap($A['ssid'], 50, '\n<br />');
+                $retval = "<a href='javascript:void();' onclick=\"alert('$ssid');\">{$LANG_PUBCONTROL_UPLUGIN[90]}</a>";
+            }
+            else {
+                $retval = "<a href='javascript:void();' onclick=\"alert('{$LANG_PUBCONTROL_UPLUGIN[121]}');\">{$LANG_PUBCONTROL_UPLUGIN[90]}</a>";
+            }
             break;
         case 'list':
-            $retval = "<a href='index.php?cmd=3&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[109]}</a>";
+            $retval = "<a href='recv.php?cmd=3&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[109]}</a>";
             break;
         case 'unsubscribe':
             $url = urlencode($A['url']);
             $ssid = urlencode($A['ssid']);
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[108]}\", \"recv.php?cmd=2&id={$A['id']}&ssid={$ssid}&url={$url}\");'>{$LANG_PUBCONTROL_UPLUGIN['107']}</a>";
+            if($A['type'] == TypeObject::O_PRIVATE) {
+                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[108]}\", \"recv.php?cmd=2&id={$A['id']}&ssid={$ssid}&url={$url}\");'>{$LANG_PUBCONTROL_UPLUGIN['107']}</a>";
+            }
+            else {                
+                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[108]}\", \"recv.php?cmd=7&id={$A['id']}&url={$url}\");'>{$LANG_PUBCONTROL_UPLUGIN['107']}</a>";
+            }
             break;
         case 'type':
             // Create edit tag
@@ -345,4 +355,74 @@ function ADMIN_getListField_listrecvcontrol_Subscribers($fieldname, $fieldvalue,
     return $retval;
 
 }
+
+#ADMIN_getListField_listrecvcontrol_SubscribersFeeds
+function ADMIN_getListField_listrecvcontrol_SubscribersFeeds($fieldname, $fieldvalue, $A, $icon_arr)
+{
+    global $_CONF, $LANG_PUBCONTROL_UPLUGIN, $_TABLES, $LANG_ACCESS, $LANG29;
+
+    $retval = '';
+    switch($fieldname) {
+        case 'url':
+            // Display URL
+            $retval = $A['url'];
+            break;
+        case 'type':
+            // Create edit tag
+            $retval = $LANG_PUBCONTROL_UPLUGIN[TypeObject::getNameForInteger($A['type'])];
+            break;
+        case 'summary':
+            $n = nl2br($A['summary']);
+            $retval = $A['summary'];#"<a href='javascript:void()' onclick='alert(\"aff\");'>{$LANG_PUBCONTROL_UPLUGIN[90]}</a>";#
+            break;
+        case 'title':
+            $retval = $A['title'];
+            break;
+        case 'delete':
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"recv.php?cmd=4&id={$A['id']}&gid={$A['subscription_id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            break;
+        case 'feeds':
+            $q = urlencode($A['url']);
+            $retval = "<a href='recv.php?cmd=10&q={$q}&d={$A['id']}&t={$A['title']}&r={$A['type']}&s={$A['sub_id']}'>{$LANG_PUBCONTROL_UPLUGIN[128]}</a>";
+            break;
+        case 'gidselect':
+            $A['summary'] = urlencode($A['summary']);
+            $A['title'] = urlencode($A['title']);
+            $A['access_code'] = urlencode($A['access_code']);
+            $retval = "<a href='recv.php?cmd=11&s={$A['summary']}&gid={$A['group_id']}&t={$A['title']}&r={$A['type']}&s={$A['sub_id']}&a={$A['access_code']}'>{$LANG_PUBCONTROL_UPLUGIN[129]}</a>";
+            break;
+        default:
+            $retval = $fieldvalue;
+            break;
+    }
+    return $retval;
+
+}
+
+function ADMIN_getListField_listrecvcontrol_SubscribersList($fieldname, $fieldvalue, $A, $icon_arr)
+{
+    global $_CONF, $LANG_PUBCONTROL_UPLUGIN, $_TABLES, $LANG_ACCESS, $LANG29;
+
+    $retval = '';
+    switch($fieldname) {
+        case 'url':
+            // Display URL
+            $retval = $A['url'];
+            break;
+        case 'type':
+            // Create edit tag
+            $retval = $LANG_PUBCONTROL_UPLUGIN[TypeObject::getNameForInteger($A['type'])];
+            break;
+        case 'feed':
+            $q = urlencode($A['url']);
+            $retval = "<a href='recv.php?cmd=8&q={$q}&r={$A['type']}&s={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[125]}</a>";
+            break;
+        default:
+            $retval = $fieldvalue;
+            break;
+    }
+    return $retval;
+
+}
+
 ?>

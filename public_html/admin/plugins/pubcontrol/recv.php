@@ -119,7 +119,7 @@ if(isset($_GET['cmd'])) {
 
             $display .= $retval;
             break;
-        // Unsubscribe
+        // Unsubscribe Private
         case 2:
             // Grab incoming
             $ssid = HostInterface::GET('ssid', '');
@@ -151,19 +151,19 @@ if(isset($_GET['cmd'])) {
             $table2 = DAL::getFormalTableName("recvcontrol_Subscriptions");
             
             if($id === 0) {
-                $qstr = "SELECT {$table}.id, title, summary, url, type FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id";
+                $qstr = "SELECT {$table}.id, title, summary, url, type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id";
             }
             else {
-                $qstr = "SELECT {$table}.id, title, summary, url, type FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id AND {$table}.subscription_id = '{$id}'";
+                $qstr = "SELECT {$table}.id, title, summary, url, type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id AND {$table}.subscription_id = '{$id}'";
             }
 
             $retval = '';
             $header_arr = array( # display 'text' and use table field 'field'
-                array('text' => $LANG_PUBCONTROL_UPLUGIN[101], 'field' => 'title', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[40], 'field' => 'title', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[20], 'field' => 'summary', 'sort' => false),
                 array('text' => $LANG_PUBCONTROL_UPLUGIN[21], 'field' => 'type', 'sort' => true),
-                array('text' => $LANG_PUBCONTROL_UPLUGIN[76], 'field' => 'summary', 'sort' => false),
-                array('text' => $LANG_PUBCONTROL_UPLUGIN[109], 'field' => 'url', 'sort' => false),
-                array('text' => $LANG01[28], 'field' => 'unsubscribe', 'sort' => false)
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[101], 'field' => 'url', 'sort' => true),
+                array('text' => $LANG01[28], 'field' => 'delete', 'sort' => false)
 
             );
 
@@ -206,6 +206,348 @@ if(isset($_GET['cmd'])) {
             $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
 
             $display .= $retval;
+           break;
+       // List all feeds subscribed
+       case 4:
+           $id = (int)HostInterface::GET("id", 0);
+           $gid = (int)HostInterface::GET("gid", 0);
+           
+           // Make sure they added it
+           if($id === 0) {
+               header("Location: recv.php?cmd=3&id={$gid}&msg=15");
+               exit;
+           }
+
+           // Call the execution method
+           $r = new ReceivingControlManagement();
+           $r->deleteFeed($id);
+           header("Location: recv.php?cmd=3&id={$gid}&msg=110");
+           break;
+       case 5:
+           // Show the user the form data to load the URL
+            $temp = new TemplatingLayer($_CONF['path'] . 'plugins/pubcontrol/templates/', 'subscribe2.thtml');
+            $temp->set_var('lang_5', $LANG_PUBCONTROL_UPLUGIN[103] . $LANG_PUBCONTROL_UPLUGIN[112]);
+            $temp->set_var('lang_81', $LANG_PUBCONTROL_UPLUGIN[113]);
+            $temp->set_var('lang_77', $LANG_PUBCONTROL_UPLUGIN[114]);
+            $temp->set_var('lang_8', $LANG_PUBCONTROL_UPLUGIN[115]);
+            $temp->set_var('lang_12', $LANG_PUBCONTROL_UPLUGIN[12]);
+            $temp->set_var('lang_13', $LANG_PUBCONTROL_UPLUGIN[13]);
+            $temp->set_var('lang_80', $LANG_PUBCONTROL_UPLUGIN[111]);
+            $display .= $temp->parse_output();
+
+           break;
+           // Return from user subscribe
+       case 6:
+           // Grab data being sent in
+           $url = HostInterface::POST("GEEKLOG_URL", '');
+           $type = (int)HostInterface::POST("GEEKLOG_PUBGTYPE", 0);
+           $components = parse_url($url);
+#           $url = urlencode($url);
+
+           // Make sure the data is valid
+           if( ($url === '') || ( ($type !== 1) && ($type !== 2)) || ($components['scheme'] != 'http')) {
+               header("Location: recv.php?msg=116");
+               exit;
+           }
+
+           // Read in the value from the site to make sure it is valid
+           $value = @file_get_contents($url . '/pubcontrol/scvalidate.php');
+           
+           if($value === FALSE) {
+               header("Location: recv.php?msg=116");
+               exit;
+           }
+           
+           // Convert to an integer to read in the value
+           $value = (int)$value;
+
+           if($value === 0) {
+               header("Location: recv.php?msg=116");
+               exit;
+           }
+
+           // Get supported types
+
+           // Is it private or public
+           if($type === 1) {
+               // Private
+               // Redirect User to the Appropriate Site ()
+               if( ($value & 0x04) !== 0x04) {
+                   // Private not supported
+                   header("Location: recv.php?msg=117");
+                   exit;
+               }
+
+               // Display a link to register at
+               $display .= <<<OUTPUT
+<br />
+{$LANG_PUBCONTROL_UPLUGIN[103]} {$LANG_PUBCONTROL_UPLUGIN[112]}
+<br /><br />
+<a href="{$url}/pubcontrol/manage.php">{$LANG_PUBCONTROL_UPLUGIN[119]}</a> {$LANG_PUBCONTROL_UPLUGIN[120]}
+OUTPUT;
+           }
+           else {
+               if( ($value & 0x02) !== 0x02) {
+                   // Public not supported
+                   header("Location: recv.php?msg=118");
+                   exit;
+               }
+
+               // Automatically Register them
+               $r = new ReceivingControlManagement();
+               if($r->finishPublicSubscription($url) === FALSE) {
+                   // Already subscribed
+                   header("Location: recv.php?msg=100");
+                   exit;
+               }
+               else {
+                   // Already subscribed
+                   header("Location: recv.php?msg=99");
+               }
+               
+           }
+           
+           break;
+        // Unsubscribe Public
+        case 7:
+            // Grab incoming
+            $url = HostInterface::GET('url', '');
+            $id = (int)HostInterface::GET('id', 0);
+            
+            // Make sure the data is valid
+            if(($url === '') || ($id === 0)) {
+                header("Location: recv.php?msg=106");
+                exit;
+            }
+
+            // Remove data
+            $re = new ReceivingControlManagement();
+            $re->unSubscribe($id);
+
+            // Redirect to clause
+            header("Location: recv.php?cmd=1&msg=105");
+            break;
+       // List all the groups from an address
+       case 8:
+            // Get group listing
+            $host = DAL::applyFilter(HostInterface::GET('q', ''));
+            $r = (int)DAL::applyFilter(HostInterface::GET('r', 0), true);
+            $s = (int)DAL::applyFilter(HostInterface::GET('s', 0));
+
+            $retval = '';
+            $header_arr = array( # display 'text' and use table field 'field'
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[19], 'field' => 'title', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[56], 'field' => 'feeds', 'sort' => false),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[21], 'field' => 'type', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[20], 'field' => 'summary', 'sort' => false),
+            );
+
+            $defsort_arr = array();
+
+            $menu_arr = array(
+                array(
+                        'url' => 'recv.php', 'text' => $LANG01[68]
+                    )
+
+                );
+            $name_r = $LANG_PUBCONTROL_UPLUGIN[TypeObject::getNameForInteger($r)];
+            $retval .= COM_startBlock($LANG_PUBCONTROL_UPLUGIN[122] . '<a href="'.$host.'"><i>`' . $host . '`</i></a>' . " ({$name_r})<br />{$LANG_PUBCONTROL_UPLUGIN[127]}", '', COM_getBlockTemplate('_admin_block', 'header'));
+
+            $retval .= ADMIN_createMenu(
+                $menu_arr,
+                $LANG_PUBCONTROL_UPLUGIN[103],
+                $_CONF['layout_url'] . '/images/icons/plugins.' . $_IMAGE_TYPE
+            );
+
+            $text_arr = array(
+                'has_extras'   => true,
+                'instructions' => 'I can haz instructions!!',
+                'form_url'     => "recv.php?cmd=8&q={$host}"
+            );
+
+            $objects = ReceivingControlManagement::listGroups($host);
+
+            if($objects === NULL) {
+                // Error occured, exit out
+                header("Location: recv.php?msg=123");
+                exit;
+            }
+
+            $data_arr = array();
+
+            foreach($objects as $obj) {
+
+                # Is it private
+                if($obj->_Type !== $r) {
+                    continue;
+                }
+
+                $arr = array(
+                    'title' => $obj->_Title,
+                    'summary' => $obj->_Summary,
+                    'type' => $obj->_Type,
+                    'id' => $obj->_Id,
+                    'url' => $host,
+                    'sub_id' => $s
+                );
+
+                $data_arr[] = $arr;
+            }
+
+            // this is a dummy variable so we know the form has been used if all plugins
+            // should be disabled in order to disable the last one.
+            $form_arr = array('bottom' => '<input type="hidden" name="pluginenabler" value="true"' . XHTML . '>');
+
+            $retval .= ADMIN_simpleList('ADMIN_getListField_listrecvcontrol_SubscribersFeeds', $header_arr,
+                        $text_arr, $data_arr, '', $form_arr);
+
+            $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
+
+            $display .= $retval;
+
+           break;
+       case 9:
+           // List all subscriptions
+            $table = DAL::getFormalTableName("recvcontrol_Subscriptions");
+
+            $qstr = "SELECT url, id, type FROM {$table}";
+
+            $retval = '';
+            $header_arr = array( # display 'text' and use table field 'field'
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[101], 'field' => 'url', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[21], 'field' => 'type', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[125], 'field' => 'feed', 'sort' => false)
+            );
+
+            $defsort_arr = array();
+
+            $menu_arr = array(
+                array(
+                        'url' => 'recv.php', 'text' => $LANG01[68]
+                    )
+
+                );
+            $retval .= COM_startBlock($LANG_PUBCONTROL_UPLUGIN[126], '', COM_getBlockTemplate('_admin_block', 'header'));
+
+            $retval .= ADMIN_createMenu(
+                $menu_arr,
+                $LANG_PUBCONTROL_UPLUGIN[103],
+                $_CONF['layout_url'] . '/images/icons/plugins.' . $_IMAGE_TYPE
+            );
+
+            $text_arr = array(
+                'has_extras'   => true,
+                'instructions' => 'I can haz instructions!!',
+                'form_url'     => "recv.php?cmd=9"
+            );
+
+            $query_arr = array(
+                'table' => DAL::getFormalTableName("recvcontrol_Subscriptions"),
+                'sql' => $qstr,
+                'query_fields' => array('url'),
+                'default_filter' => ''
+            );
+
+            // this is a dummy variable so we know the form has been used if all plugins
+            // should be disabled in order to disable the last one.
+            $form_arr = array('bottom' => '<input type="hidden" name="pluginenabler" value="true"' . XHTML . '>');
+
+            $retval .= ADMIN_list('pubcontrol_Groups', 'ADMIN_getListField_listrecvcontrol_SubscribersList', $header_arr,
+                        $text_arr, $query_arr, $defsort_arr, '', $token, '', $form_arr, false);
+
+            $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
+
+            $display .= $retval;
+
+
+       break;
+       // List all the feeds from an address
+       case 10:
+            // Get group listing
+            $host = DAL::applyFilter(HostInterface::GET('q', ''));
+            $gid = (int)HostInterface::GET('d', 0);
+            $title = DAL::applyFilter(HostInterface::GET('t', ''));
+            $r = (int)DAL::applyFilter(HostInterface::GET('r', 0));
+            $s = (int)DAL::applyFilter(HostInterface::GET('s', 0));
+
+            $retval = '';
+            $header_arr = array( # display 'text' and use table field 'field'
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[19], 'field' => 'title', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[129], 'field' => 'gidselect', 'sort' => false),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[21], 'field' => 'type', 'sort' => true),
+                array('text' => $LANG_PUBCONTROL_UPLUGIN[20], 'field' => 'summary', 'sort' => false),
+            );
+
+            $defsort_arr = array();
+
+            $menu_arr = array(
+                array(
+                        'url' => 'recv.php', 'text' => $LANG01[68]
+                    )
+
+                );
+            $name_r = $LANG_PUBCONTROL_UPLUGIN[TypeObject::getNameForInteger($r)];
+            $retval .= COM_startBlock($LANG_PUBCONTROL_UPLUGIN[130] . '<a href="'.$host.'"><i>`' . $host . '`</i></a>' . " ({$name_r}) {$LANG_PUBCONTROL_UPLUGIN[131]} `{$title}`", '', COM_getBlockTemplate('_admin_block', 'header'));
+
+            $retval .= ADMIN_createMenu(
+                $menu_arr,
+                $LANG_PUBCONTROL_UPLUGIN[103],
+                $_CONF['layout_url'] . '/images/icons/plugins.' . $_IMAGE_TYPE
+            );
+
+            $text_arr = array(
+                'has_extras'   => true,
+                'instructions' => 'I can haz instructions!!',
+                'form_url'     => "recv.php?cmd=10&q={$host}&d={$gid}"
+            );
+
+            $objects = ReceivingControlManagement::listFeeds($host, $gid);
+
+            if($objects === NULL) {
+                // Error occured, exit out
+                header("Location: recv.php?msg=123");
+                exit;
+            }
+
+            $data_arr = array();
+
+            foreach($objects as $obj) {
+                $arr = array(
+                    'title' => $obj->_Title,
+                    'summary' => $obj->_Summary,
+                    'type' => $obj->_Type,
+                    'id' => $obj->_Id,
+                    'group_id' => $obj->_GroupId,
+                    'access_code' => $obj->_AccessCode,
+                    'sub_id' => $s
+                );
+
+                $data_arr[] = $arr;
+            }
+
+            // this is a dummy variable so we know the form has been used if all plugins
+            // should be disabled in order to disable the last one.
+            $form_arr = array('bottom' => '<input type="hidden" name="pluginenabler" value="true"' . XHTML . '>');
+
+            $retval .= ADMIN_simpleList('ADMIN_getListField_listrecvcontrol_SubscribersFeeds', $header_arr,
+                        $text_arr, $data_arr, '', $form_arr);
+
+            $retval .= COM_endBlock(COM_getBlockTemplate('_admin_block', 'footer'));
+
+            $display .= $retval;
+
+           break;
+
+
+       # This is a funny test
+       case 1000:
+           echo "This is a test<br />";
+
+           $r = new ReceivingControlManagement();
+           echo '<pre>';
+           $t = $r->collectFeedData("http://localhost/gsoc/gsoc-2010-tpatrick/public_html/pubcontrol/", 2);
+           var_dump($t);
+           echo '</pre>';
            break;
 
 
@@ -290,6 +632,10 @@ else {
     $temp->set_var('lang_94', $LANG_PUBCONTROL_UPLUGIN[94]);
     $temp->set_var('lang_95', $LANG_PUBCONTROL_UPLUGIN[95]);
     $temp->set_var('lang_96', $LANG_PUBCONTROL_UPLUGIN[96]);
+    $temp->set_var('lang_102', $LANG_PUBCONTROL_UPLUGIN[102]);
+    $temp->set_var('lang_109', $LANG_PUBCONTROL_UPLUGIN[109]);
+    $temp->set_var('lang_111', $LANG_PUBCONTROL_UPLUGIN[111]);
+    $temp->set_var('lang_124', $LANG_PUBCONTROL_UPLUGIN[124]);
 
     $display .= $temp->parse_output();
     

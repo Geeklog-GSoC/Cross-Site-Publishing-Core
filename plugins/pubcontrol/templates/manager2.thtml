@@ -9,8 +9,10 @@
 <div class="bigload">
     <b>{lang_96}</b>
     <br /><br />
-    <a href="index.php?cmd=2">{lang_23}</a>
-    <br /><a href="index.php?cmd=4">{lang_22}</a>
+    <a href="recv.php?cmd=1">{lang_102}</a>
+    <br /><a href="recv.php?cmd=3">{lang_109}</a>
+    <br /><a href="recv.php?cmd=5">{lang_111}</a>
+    <br /><a href="recv.php?cmd=9">{lang_124}</a>
 
 </div>
 
