@@ -1,0 +1,28 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+{lang_5}
+<br />
+<i>{lang_81}</i>
+<br />
+<form name="PubControl_AddGroup" method="post" action="recv.php?cmd=6" enctype="multipart/form-data">
+
+<div class="smalltxt" id="GEEKLOG_PUPLOAD_ERRFORM" style="color:red"></div>
+
+<div class="smalltxt">{lang_77}</div>
+<input class="long" maxlength="100" type="text" name="GEEKLOG_URL" id="GEEKLOG_URL" value="" />
+
+<div class="smalltxt">{lang_8}</div>
+<select class="pubcontrol" name="GEEKLOG_PUBGTYPE" id="GEEKLOG_PUBGTYPE">
+    <option value="1">{lang_12}</option>
+    <option value="2" selected="selected">{lang_13}</option>
+</select>
+
+
+<div class="smalltxt"></div>
+<input class="pubcontrol" type="submit" name="submit_modify_sgroup" value="{lang_80}" />
+
+
+</form>
+<!-- End PubControl Manager -->

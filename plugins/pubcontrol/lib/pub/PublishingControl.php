@@ -291,8 +291,8 @@ class PublishingFeedControl
         $feedobject->_Type = DAL::applyFilter($feedobject->_Type, true);
         $feedobject->_Title = DAL::applyFilter($feedobject->_Title);
 
-        $sql = "INSERT INTO {$table} (group_id, title, summary, type, access_code)
-                VALUES('{$feedobject->_GroupId}', '{$feedobject->_Title}','{$feedobject->_Summary}','{$feedobject->_Type}', '{$feedobject->_AccessCode}');";
+        $sql = "INSERT INTO {$table} (group_id, title, summary, type, access_code, last_modified)
+                VALUES('{$feedobject->_GroupId}', '{$feedobject->_Title}','{$feedobject->_Summary}','{$feedobject->_Type}', '{$feedobject->_AccessCode}', NOW());";
 
         // Send out the query
         $conn->executeNonQuery($sql);
@@ -499,6 +499,22 @@ class PublishingDataControl
     // Private Variables
     private $_Conn = NULL;
 
+    /**
+     * Updates the feed table entries last modified tag to determine when the last modified date was
+     *
+     * @param   Integer     $feedid     The feed id
+     */
+    private function _updateLastModified($feedid)
+    {
+        // Grab the connection
+        $conn = $this->_Conn;
+        $table = DAL::getFormalTableName("pubcontrol_Feeds");
+        $feedid = (int)DAL::applyFilter($feedid, true);
+
+        // Send query
+        $conn->executeNonQuery("UPDATE {$table} SET last_modified = NOW() WHERE id = '{$feedid}';");
+    }
+
     public function __construct()
     {
         $this->_Conn = new DAL();
@@ -548,6 +564,7 @@ class PublishingDataControl
                 ('{$DataObject->_FeedId}', '{$DataObject->_Title}', '{$DataObject->_Content}',
                 '{$DataObject->_DateCreated}', '{$DataObject->_DateLastUpdated}', '{$authors}', '{$cont}');";
         $conn->executeNonQuery($sql);
+        $this->_updateLastModified($DataObject->_FeedId);
         return $conn->getInsertId();
     }
 
@@ -578,14 +595,16 @@ class PublishingDataControl
         $sql = "UPDATE {$table} SET feed_id = '{$DataObject->_FeedId}', title = '{$DataObject->_Title}', content = '{$DataObject->_Content}',
                 date_created = '{$DataObject->_DateCreated}', date_lastupdated = '{$DataObject->_DateLastUpdated}', authors = '{$authors}', contributors = '{$cont}' WHERE id = '{$dataid}';";
         $conn->executeNonQuery($sql);
+        $this->_updateLastModified($DataObject->_FeedId);
     }
 
     /**
      * Removes a data entry from the feed
      * @param  $dataid The data object to delete
+     * @param  $feedid The feed id
      * @throws PublishingException on serious error
      */
-    public function deleteData($dataid)
+    public function deleteData($dataid, $feedid)
     {
         // Grab connection and create variables
         $conn = $this->_Conn;
@@ -595,6 +614,7 @@ class PublishingDataControl
         // Must be ok, send deletion request
         $sql = "DELETE FROM {$table} WHERE id = '{$dataid}';";
         $conn->executeNonQuery($sql);
+        $this->_updateLastModified($feedid);
     }
 
     /**
@@ -631,6 +651,7 @@ class PublishingDataControl
             $dsg->_Title = $row['title'];
             $dataobjects[] = $dsg;
         }
+        
 
         return $dataobjects;
     }
@@ -1348,7 +1369,7 @@ class PublishingControl
 
                     // Write out feed data
                     $buffer->write("
-                       <?xml version='1.0' encoding='utf-8'?>
+                       <xml version='1.0' encoding='utf-8'>
                         <feed xmlns='http://www.w3.org/2005/Atom'>
                        <title>{$fdata[0]->_Title}</title>
                        <id>tag:site_url,date:{$fdata[0]->_AccessCode}.{$fdata[0]->_Id}.{$fdata[0]->_GroupId}</id>
@@ -1394,7 +1415,7 @@ class PublishingControl
 
                     }
 
-                    $buffer->write("</feed>");
+                    $buffer->write("</feed></xml>");
 
                     return $buffer->getOutput();
                 case CMD_LIST_FEEDS:
@@ -1421,7 +1442,7 @@ class PublishingControl
 
                     // And now list all feeds
                     $buffer->write("
-                       <?xml version='1.0' encoding='utf-8'?>
+                       <xml version='1.0' encoding='utf-8'>
                         <feed xmlns='http://www.w3.org/2005/Atom'>
                        <title>List of feeds</title>
                        <id>tag:0,0:1</id>
@@ -1436,19 +1457,19 @@ class PublishingControl
                             <entry>
                                 <title>{$fobj->_Title}</title>
                                 <link></link>
-                                <id>tag:0,0:{$fobj->_GroupId}.{$fobj->_Id}.{$fobj->_Type}</id>
+                                <id>tag:0,0:{$fobj->_GroupId}.{$fobj->_Id}.{$fobj->_Type}.{$fobj->_AccessCode}</id>
                                 <published></published>
                                 <summary>{$fobj->_Summary}</summary>
                             </entry>
                         ");
                     }
 
-                    $buffer->write("</feed>");
+                    $buffer->write("</feed></xml>");
                     return $buffer->getOutput();
                 case CMD_LIST_GROUPS:
                     // And now list all groups
                     $buffer->write("
-                       <?xml version='1.0' encoding='utf-8'?>
+                       <xml version='1.0' encoding='utf-8'>
                         <feed xmlns='http://www.w3.org/2005/Atom'>
                        <title>List of groups</title>
                        <id>tag:0,0:1</id>
@@ -1472,7 +1493,7 @@ class PublishingControl
                         ");
                     }
 
-                    $buffer->write("</feed>");
+                    $buffer->write("</feed></xml>");
                     return $buffer->getOutput();
                 case CMD_SUBSCRIBE:
                     // UnSubscribe to the database

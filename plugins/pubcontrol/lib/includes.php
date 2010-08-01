@@ -1,6 +1,8 @@
 <?php
 //set_include_path(get_include_path() . PATH_SEPARATOR . "/media/TIM_USB/GeeklogDevlSOC/");
 
+require $_CONF['path'] . 'system/classes/atomhelper.class.php';
+
 $include_path = $_CONF['path'] . 'plugins/pubcontrol/';
 
 require $include_path . 'lib/lib/host/DatabaseAbstractionLayer.php';
