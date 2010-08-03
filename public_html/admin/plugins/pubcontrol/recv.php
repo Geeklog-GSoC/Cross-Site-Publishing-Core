@@ -151,10 +151,10 @@ if(isset($_GET['cmd'])) {
             $table2 = DAL::getFormalTableName("recvcontrol_Subscriptions");
             
             if($id === 0) {
-                $qstr = "SELECT {$table}.id, title, summary, url, type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id";
+                $qstr = "SELECT {$table}.id, title, summary, url, {$table2}.type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id";
             }
             else {
-                $qstr = "SELECT {$table}.id, title, summary, url, type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id AND {$table}.subscription_id = '{$id}'";
+                $qstr = "SELECT {$table}.id, title, summary, url, {$table2}.type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id AND {$table}.subscription_id = '{$id}'";
             }
 
             $retval = '';
@@ -510,8 +510,14 @@ OUTPUT;
             }
 
             $data_arr = array();
+            $receiving = new ReceivingControlManagement();
 
             foreach($objects as $obj) {
+                // First check if that feed is already in the database
+                if($receiving->feedExists($obj->_Id) === true) {
+                    continue;
+                }
+
                 $arr = array(
                     'title' => $obj->_Title,
                     'summary' => $obj->_Summary,
@@ -537,7 +543,37 @@ OUTPUT;
             $display .= $retval;
 
            break;
+       case 11:
+           // Get incoming data
+           $summary = DAL::applyFilter(HostInterface::GET('sum', ''));
+           $gid = (int)DAL::applyFilter(HostInterface::GET('gid', 0));
+           $title = DAL::applyFilter(HostInterface::GET('t', ''));
+           $type = (int)DAL::applyFilter(HostInterface::GET('r', 0));
+           $sid = (int)DAL::applyFilter(HostInterface::GET('s', 0));
+           $access = DAL::applyFilter(HostInterface::GET('a', ''));
+           $id =  (int)DAL::applyFilter(HostInterface::GET('fid', 0));
 
+           // Make sure it is valid
+           if( ($summary === '') || ($gid === 0) || ($title === '') || ($type === 0) || ($sid === 0) || ($access === '') || ($id === 0)) {
+               header("Location: recv.php?msg=15");
+               exit;
+           }
+
+           // Attempt to add it
+           $feed = new FeedObject();
+           $feed->_Id = $id;
+           $feed->_Title = $title;
+           $feed->_Summary = $summary;
+           $feed->_Type = $type;
+           $feed->_GroupId = $gid;
+           $feed->_AccessCode = $access;
+
+           $re = new ReceivingControlManagement();
+           $re->addFeed($feed, $sid);
+
+           header("Location: recv.php?msg=132");
+
+           break;
 
        # This is a funny test
        case 1000:
@@ -545,8 +581,9 @@ OUTPUT;
 
            $r = new ReceivingControlManagement();
            echo '<pre>';
-           $t = $r->collectFeedData("http://localhost/gsoc/gsoc-2010-tpatrick/public_html/pubcontrol/", 2);
-           var_dump($t);
+           $r->doDataScrape();
+           #$t = $r->collectFeedData("http://localhost/gsoc/gsoc-2010-tpatrick/public_html/pubcontrol/", 2);
+           #var_dump($t);
            echo '</pre>';
            break;
 

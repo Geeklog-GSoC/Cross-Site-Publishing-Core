@@ -165,6 +165,7 @@ $LANG_PUBCONTROL_UPLUGIN = array(
     129 => 'Join this feed',
     130 => 'Feeds that exist for repository ',
     131 => ' and group ',
+    132 => 'You have joined the selected feed'
 
 );
 

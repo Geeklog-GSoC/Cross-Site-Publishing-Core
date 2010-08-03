@@ -282,7 +282,8 @@ class AtomReader
     public static function isNewData($url, $olddate)
     {
         // Grab the headers from the url
-        $headers = get_headers(urlencode($url . '&fmt=headers'), 1);
+       
+        $headers = get_headers($url . '&fmt=headers', 1);
 
         if($headers === FALSE) {
             return -3;
@@ -422,7 +423,6 @@ class AtomReader
 
         // Read in the top data into an object instance
         $obj = new AtomFeed();
-        echo $this->_Handle->feed->title;
         $obj->_Title = $this->_Handle->feed->title;
         $obj->_SubTitle = $this->_Handle->feed->subtitle;
         $obj->_Link = $this->_Handle->feed->link;
