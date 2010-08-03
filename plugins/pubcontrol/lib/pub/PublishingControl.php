@@ -484,9 +484,9 @@ class PublishingFeedControl
             $frp->_Summary = $row['summary'];
             $frp->_Type = $row['type'];
             $frp->_Title = $row['title'];
+            $frp->_DateLastUpdated = strtotime($row['last_modified']);
             $feedarray[] = $frp;
         }
-
         return $feedarray;
     }
 }
@@ -1367,6 +1367,12 @@ class PublishingControl
                     // Grab feed data
                     $fdata = $feedobj->listFeeds($feedid, true);
 
+                    if(isset($_GET['fmt']) && ($_GET['fmt'] === "headers")) {
+                        $date = date ("F d Y H:i:s.", $fdata[0]->_DateLastUpdated);
+                        header("Last-Modified: {$date}");
+                        exit;
+                    }
+
                     // Write out feed data
                     $buffer->write("
                        <xml version='1.0' encoding='utf-8'>
@@ -1655,6 +1661,12 @@ class FeedObject
      * @var AccessCode
      */
     public $_AccessCode = NULL;
+
+     /**
+     * The time it was last updated
+     * @var TimeStamp as an int
+     */
+    public $_DateLastUpdated = NULL;
 
     /**
      * Verifies to see if the data is valid

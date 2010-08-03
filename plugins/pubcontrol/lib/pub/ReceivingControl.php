@@ -106,6 +106,53 @@ class ReceivingControlManagement
     }
 
     /**
+     * Checks to see if a feed by that ID exists in the database
+     *
+     * @param   Integer $feed_id          The real feed id from the repository, not the local id
+     * @return  Boolean                   True if it exists, false if not
+     */
+    public function feedExists($feed_id)
+    {
+        $conn = $this->_Conn;
+        $table = DAL::getFormalTableName("recvcontrol_Feeds");
+        $feed_id = (int)DAL::applyFilter($feed_id, TRUE);
+        $found = FALSE;
+        
+        $result = $conn->executeQuery("SELECT feed_id FROM {$table} WHERE feed_id = '{$feed_id}';");
+        if($result === NULL) {
+            return false;
+        }
+        
+        return true;
+
+        
+    }
+
+    /**
+     * Adds a feed to the database from a valid SUI
+     * NOTE: CONTENT IS NOT FILTERED
+     *
+     * @param FeedObject $FeedObject        The feed object
+     * @param Integer    $sid               The subscription id
+     */
+    public function addFeed($feedobject, $sid)
+    {
+        // Declare variables
+        $conn = $this->_Conn;
+
+        // Attempt to insert into the database
+        $table = DAL::getFormalTableName("recvcontrol_Feeds");
+
+        $sql = "INSERT INTO {$table} (feed_id, group_id, title, summary, type, access_code, last_modified, subscription_id)
+                VALUES('{$feedobject->_Id}', '{$feedobject->_GroupId}', '{$feedobject->_Title}','{$feedobject->_Summary}','{$feedobject->_Type}', '{$feedobject->_AccessCode}', NOW(), '{$sid}');";
+
+        // Send out the query
+        $conn->executeNonQuery($sql);
+        return $conn->getInsertId();
+    }
+
+
+    /**
      * Unsubscribes a site from the application
      *
      * @param   int     $id     The id of the subscription
@@ -374,7 +421,7 @@ class ReceivingControlManagement
         $table = DAL::getFormalTableName("recvcontrol_Feeds");
         $table2 = DAL::getFormalTableName("recvcontrol_Subscriptions");
         $conn = $this->_Conn;
-        $conn->executeQuery("SELECT {$table}.id AS feed_id, url, last_modified, ssid, type FROM {$table}, {$table2} WHERE {$table}.subscription_id = {$table2}.id;");
+        $result = $conn->executeQuery("SELECT {$table}.id AS qfeed_id, feed_id, url, last_modified, ssid, {$table2}.type FROM {$table}, {$table2} WHERE {$table}.subscription_id = {$table2}.id;");
         $array = Array();
 
         // Loop over the results, and for each one record the URL and the last_modifed date
@@ -385,8 +432,10 @@ class ReceivingControlManagement
               "last_modified" => strtotime($row['last_modified']),
               "ssid" => $row['ssid'],
               "type" => $row['type'],
-              "feed_id" => $row['feed_id']
+              "feed_id" => $row['feed_id'],
+              "id" => $row['qfeed_id']
             );
+
         }
 
         // Now we have the data, lets do a full scrape for each URL
@@ -394,31 +443,42 @@ class ReceivingControlManagement
         foreach($array as $value)
         {
             // Is it new data
-            if(AtomReader::isNewData($value['url']) === TRUE) {
+            if(AtomReader::isNewData($value['url'] . "/pubcontrol/index.php?cmd=109&id={$value['feed_id']}&ssid={$value['ssid']}", $value['last_modified']) === 0) {
                 $DataObjects = $this->collectFeedData($value['url'], $value['feed_id'], $value['ssid']);
                 $DataObjects = $DataObjects[1];
+                $oldest = 0;
                 
                 // Now loop through and only get ones with last_modified > than the original
                 foreach($DataObjects as $obj)
                 {
                     // Older?
-                    if($strtotime($obj->_DateLastUpdated) < $value['last_modified']) {
+                    $b = strtotime($obj->_DateLastUpdated);
+                    if($b < $value['last_modified']) {
                         // Since it is always oldest last, then once one last-modified is reached, they all are old
                         break;
+                    }
+
+                    if($b > $oldest) {
+                        $oldest = $b;
                     }
 
                     // Insert the data into the database
                     $title = DAL::applyFilter($obj->_Title);
                     $content = $obj->_Content;
                     $date_created = strtotime($obj->_DateCreated);
-                    $date_updated = strtotime($obj->_DateLastUpdated);
+                    $date_updated = $b;
                     $table = DAL::getFormalTableName("recvcontrol_Data");
                     $query = "INSERT INTO {$table} (feed_id, title, content, date_created, date_lastupdated, authors, contributors) VALUES
                         ('{$value['feed_id']}', '{$title}', '{$content}', FROM_UNIXTIME({$date_created}), FROM_UNIXTIME({$date_updated}), '', '');
                     ";
-                    $conn = $this->_Conn;
                     $conn->executeNonQuery($query);
                 }
+
+                // Update feed
+                $dt = date("Y-m-d H:i:s", $oldest);
+                $table2 = DAL::getFormalTableName("recvcontrol_Feeds");
+                $conn->executeNonQuery("UPDATE {$table2} SET last_modified = '{$dt}';");
+                
             }
         }
         
