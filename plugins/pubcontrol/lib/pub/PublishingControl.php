@@ -720,19 +720,21 @@ class PublishingSecurityManagement
      * Checks to see if the incoming ssid is valid
      *
      * @param   String          The SSID
+     * @param   Integer         &Incoming The ID of the subscriber
      * @return  Boolean         True on valid, false on negative
      */
-    private function _ssidValid($ssid)
+    private function _ssidValid($ssid, &$id)
     {
         // Declare Variables
         $conn = $this->_Conn;
         $table = DAL::getFormalTableName("pubcontrol_Subscribers");
         
         // Grab the data
-        $mixed = $this->_getRealSSID($ssid);
-        $ssid = DAL::applyFilter($mixed['SSID']);
-        
-        $result = $conn->executeQuery("SELECT mode FROM {$table} WHERE ssid = '{$ssid}';");
+        $mixed = $this->_getRealSSID($ssid, TRUE);
+
+        $ssid = urlencode(DAL::applyFilter($mixed['SSID']));
+
+        $result = $conn->executeQuery("SELECT mode, id FROM {$table} WHERE ssid = '{$ssid}';");
         $row = $result->fetchAssoc();
 
         if( ($row === NULL) || ($row['mode'] !== 'Y'))
@@ -740,6 +742,7 @@ class PublishingSecurityManagement
             return false;
         }
 
+        $id = $row['id'];
         return true;
     }
 
@@ -989,9 +992,9 @@ class PublishingSecurityManagement
 
         // The work of this method is two fold
         // First, it needs to get the id from the ssid
-        $mixed = $this->_getRealSSID($ssid);
-
-        if($this->_ssidValid($ssid) === FALSE)
+        $mixed = $this->_getRealSSID($ssid, TRUE);
+        $id = 0;
+        if($this->_ssidValid($ssid, $id) === FALSE)
         {
             return false;
         }
@@ -1007,7 +1010,6 @@ class PublishingSecurityManagement
         }
 
         // Get all groups associated with subscriber id
-        $id = DAL::applyFilter($mixed['ID'], true);
         $subscriberg = array();
         $table = DAL::getFormalTableName("pubcontrol_SubscriberGroupLink");
         $result = $conn->executeQuery("SELECT securitygroup_id FROM {$table} WHERE subscriber_id = '{$id}';");

@@ -36,7 +36,7 @@
 require_once '../lib-common.php';
 require_once $_CONF['path'] . 'plugins/pubcontrol/functions.inc';
 
-header("Content-Type: application/xml");
+#header("Content-Type: application/xml");
 // See what request we are dealing with
 try {
     $pub = new PublishingControl();
