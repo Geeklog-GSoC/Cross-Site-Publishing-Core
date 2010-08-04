@@ -383,7 +383,7 @@ function ADMIN_getListField_listrecvcontrol_SubscribersFeeds($fieldname, $fieldv
             break;
         case 'feeds':
             $q = urlencode($A['url']);
-            $retval = "<a href='recv.php?cmd=10&q={$q}&d={$A['id']}&t={$A['title']}&r={$A['type']}&s={$A['sub_id']}'>{$LANG_PUBCONTROL_UPLUGIN[128]}</a>";
+            $retval = "<a href='recv.php?cmd=10&q={$q}&d={$A['id']}&t={$A['title']}&r={$A['rep_id']}&s={$A['sub_id']}'>{$LANG_PUBCONTROL_UPLUGIN[128]}</a>";
             break;
         case 'gidselect':
             $A['summary'] = urlencode($A['summary']);

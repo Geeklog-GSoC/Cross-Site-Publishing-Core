@@ -378,7 +378,7 @@ OUTPUT;
             foreach($objects as $obj) {
 
                 # Is it private
-                if($obj->_Type !== $r) {
+                if( ($obj->_Type !== $r) && ($r === TypeObject::O_PUBLIC)) {
                     continue;
                 }
 
@@ -388,7 +388,8 @@ OUTPUT;
                     'type' => $obj->_Type,
                     'id' => $obj->_Id,
                     'url' => $host,
-                    'sub_id' => $s
+                    'sub_id' => $s,
+                    'rep_id' => $r
                 );
 
                 $data_arr[] = $arr;
@@ -518,6 +519,11 @@ OUTPUT;
                     continue;
                 }
 
+                # Is it private
+                if( ($obj->_Type !== $r) && ($r === TypeObject::O_PUBLIC)) {
+                    continue;
+                }
+
                 $arr = array(
                     'title' => $obj->_Title,
                     'summary' => $obj->_Summary,
@@ -582,7 +588,7 @@ OUTPUT;
            $r = new ReceivingControlManagement();
            echo '<pre>';
            $r->doDataScrape();
-           #$t = $r->collectFeedData("http://localhost/gsoc/gsoc-2010-tpatrick/public_html/pubcontrol/", 2);
+#           $t = $r->collectFeedData("http://localhost/gsoc/gsoc-2010-tpatrick/public_html/pubcontrol/", 2);
            #var_dump($t);
            echo '</pre>';
            break;

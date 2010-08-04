@@ -117,9 +117,9 @@ class ReceivingControlManagement
         $table = DAL::getFormalTableName("recvcontrol_Feeds");
         $feed_id = (int)DAL::applyFilter($feed_id, TRUE);
         $found = FALSE;
-        
         $result = $conn->executeQuery("SELECT feed_id FROM {$table} WHERE feed_id = '{$feed_id}';");
-        if($result === NULL) {
+        if($result->fetchAssoc() === NULL) {
+
             return false;
         }
         
