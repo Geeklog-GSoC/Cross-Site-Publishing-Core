@@ -96,13 +96,13 @@ function ADMIN_getListField_listpubcontrol_groups($fieldname, $fieldvalue, $A, $
     switch($fieldname) {
         case 'title':
             // Create edit tag
-            $retval = "<a href='index.php?cmd=3&id={$A['id']}'>{$A['title']}</a>";
+            $retval = "<a href='publ.php?cmd=3&id={$A['id']}'>{$A['title']}</a>";
             break;
         case 'delete':
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=group_delete&id={$A['id']}\");'>{$LANG01[28]}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"publ.php?ret=group_delete&id={$A['id']}\");'>{$LANG01[28]}</a>";
             break;
         case 'load_feeds':
-            $retval = "<a href='index.php?cmd=7&gid={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[39]}</a>";
+            $retval = "<a href='publ.php?cmd=7&gid={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[39]}</a>";
             break;
         case 'summary':
             // Check to see if the repository is ok
@@ -129,13 +129,13 @@ function ADMIN_getListField_listpubcontrol_feeds($fieldname, $fieldvalue, $A, $i
     switch($fieldname) {
         case 'title':
             // Create edit tag
-            $retval = "<a href='index.php?cmd=6&id={$A['id']}'>{$A['title']}</a>";
+            $retval = "<a href='publ.php?cmd=6&id={$A['id']}'>{$A['title']}</a>";
             break;
         case 'load_data':
-            $retval = "<a href='index.php?cmd=109&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[38]}</a>";
+            $retval = "<a href='publ.php?cmd=109&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[38]}</a>";
             break;
         case 'delete':
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=feed_delete&id={$A['id']}\");'>{$LANG01[28]}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"publ.php?ret=feed_delete&id={$A['id']}\");'>{$LANG01[28]}</a>";
             break;
         case 'summary':
             // Check to see if the repository is ok
@@ -161,18 +161,18 @@ function ADMIN_getListField_listpubcontrol_sgroup($fieldname, $fieldvalue, $A, $
     switch($fieldname) {
         case 'title':
             // Create edit tag
-            $retval = "<a href='index.php?cmd=8&id={$A['id']}'>{$A['title']}</a>";
+            $retval = "<a href='publ.php?cmd=8&id={$A['id']}'>{$A['title']}</a>";
             break;
         case 'assign':
             // Create edit tag
-            $retval = "<a href='index.php?cmd=11&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[51]}</a>";
+            $retval = "<a href='publ.php?cmd=11&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[51]}</a>";
             break;
         case 'assigned':
             // Create edit tag
-            $retval = "<a href='index.php?cmd=12&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[56]}</a>";
+            $retval = "<a href='publ.php?cmd=12&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[56]}</a>";
             break;
         case 'delete':
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=sgroup_delete&id={$A['id']}\");'>{$LANG01[28]}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"publ.php?ret=sgroup_delete&id={$A['id']}\");'>{$LANG01[28]}</a>";
             break;
         case 'summary':
             // Check to see if the repository is ok
@@ -202,7 +202,7 @@ function ADMIN_getListField_listpubcontrol_sgroupfeed($fieldname, $fieldvalue, $
             $retval = $A['title'];
             break;
         case 'delete':
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=sgroupfeed_delete&id={$A['securitygroup_id']}&fid={$A['feed_id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"publ.php?ret=sgroupfeed_delete&id={$A['securitygroup_id']}&fid={$A['feed_id']}\");'>{$LANG_ACCESS['remove']}</a>";
             break;
         default:
             $retval = $fieldvalue;
@@ -223,13 +223,13 @@ function ADMIN_getListField_listpubcontrol_submod($fieldname, $fieldvalue, $A, $
             $retval = $A['url'];
             break;
         case 'delete':
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=subscriber_delete&id={$A['id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"publ.php?ret=subscriber_delete&id={$A['id']}\");'>{$LANG_ACCESS['remove']}</a>";
             break;
         case 'approve':
             $A['ssid'] = urlencode($A['ssid']);
             $A['identifier'] = urlencode($A['identifier']);
             $A['url'] = urlencode($A['url']);
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[64]}\", \"index.php?ret=subscriber_approve&id={$A['id']}&ssid={$A['ssid']}&email={$A['identifier']}&url={$A['url']}\");'>{$LANG29[1]}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[64]}\", \"publ.php?ret=subscriber_approve&id={$A['id']}&ssid={$A['ssid']}&email={$A['identifier']}&url={$A['url']}\");'>{$LANG29[1]}</a>";
             break;
         default:
             $retval = $fieldvalue;
@@ -257,23 +257,23 @@ function ADMIN_getListField_listpubcontrol_subnorm($fieldname, $fieldvalue, $A, 
             $retval = "<a href='javascript:void();' onclick=\"alert('$ssid');\">{$LANG_PUBCONTROL_UPLUGIN[90]}</a>";
             break;
         case 'delete':
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=subscriber_delete&id={$A['id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"publ.php?ret=subscriber_delete&id={$A['id']}\");'>{$LANG_ACCESS['remove']}</a>";
             break;
         case 'suspend':
             if($A['mode'] === 'Y') {
-                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[66]}\", \"index.php?ret=subscriber_suspend&id={$A['id']}\");'>{$LANG_PUBCONTROL_UPLUGIN[65]}</a>";
+                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[66]}\", \"publ.php?ret=subscriber_suspend&id={$A['id']}\");'>{$LANG_PUBCONTROL_UPLUGIN[65]}</a>";
             }
             else {
-                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[66]}\", \"index.php?ret=subscriber_unsuspend&id={$A['id']}\");'>{$LANG_PUBCONTROL_UPLUGIN[67]}</a>";
+                $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[66]}\", \"publ.php?ret=subscriber_unsuspend&id={$A['id']}\");'>{$LANG_PUBCONTROL_UPLUGIN[67]}</a>";
             }
             break;
         case 'assign':
             // Create edit tag
-            $retval = "<a href='index.php?cmd=15&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[68]}</a>";
+            $retval = "<a href='publ.php?cmd=15&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[68]}</a>";
             break;
         case 'assigned':
             // Create edit tag
-            $retval = "<a href='index.php?cmd=16&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[70]}</a>";
+            $retval = "<a href='publ.php?cmd=16&id={$A['id']}'>{$LANG_PUBCONTROL_UPLUGIN[70]}</a>";
             break;
         default:
             $retval = $fieldvalue;
@@ -298,7 +298,7 @@ function ADMIN_getListField_listpubcontrol_sgroupsub($fieldname, $fieldvalue, $A
             $retval = $A['title'];
             break;
         case 'delete':
-            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"index.php?ret=sgroupsub_delete&id={$A['securitygroup_id']}&fid={$A['subscriber_id']}\");'>{$LANG_ACCESS['remove']}</a>";
+            $retval = "<a href='javascript:void();' onclick='deleteItem(\"{$LANG_PUBCONTROL_UPLUGIN[24]}\", \"publ.php?ret=sgroupsub_delete&id={$A['securitygroup_id']}&fid={$A['subscriber_id']}\");'>{$LANG_ACCESS['remove']}</a>";
             break;
         default:
             $retval = $fieldvalue;

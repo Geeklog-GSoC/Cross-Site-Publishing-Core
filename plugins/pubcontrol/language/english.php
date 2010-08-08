@@ -165,7 +165,23 @@ $LANG_PUBCONTROL_UPLUGIN = array(
     129 => 'Join this feed',
     130 => 'Feeds that exist for repository ',
     131 => ' and group ',
-    132 => 'You have joined the selected feed'
+    132 => 'You have joined the selected feed',
+    134 => 'Publishing and Receiving Control Panel',
+    135 => 'Enable',
+    136 => 'Disable',
+    137 => 'Your publication control settings for this site are',
+    138 => 'Your site offers a public repository',
+    139 => 'Your site offers a private repository',
+    140 => 'You have the following sites awaiting approval to subscribe to your repository',
+    141 => '(None) - Repositories Disabled',
+    142 => ' sites awaiting approval',
+    143 => 'Advanced Functionality',
+    144 => 'Do not use unless you are sure of what you are doing - it is usually best to let the various plugins take care of this functionality',
+    145 => 'Publication Control Settings',
+    146 => 'Receiving Control Settings',
+    147 => 'Security Group controls (Control who sees which private feeds)',
+    148 => '(None) - Private repository disabled',
+    149 => 'List of private subscribers to your repository'
 
 );
 

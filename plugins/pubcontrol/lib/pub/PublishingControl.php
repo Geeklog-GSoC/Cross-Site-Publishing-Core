@@ -77,6 +77,30 @@ class PublishingGroupControl
     }
 
     /**
+     * Gets the id for the no display group title (Only works with no display unique titles)
+     *
+     * @param   Integer       $title      The title of the group
+     * @return  Mixed                     The id of the group (> 0) OR FALSE on failure
+     */
+    public function getIdForNDTitle($title)
+    {
+        // Declare Variables
+        $conn = new DAL();
+        $title = DAL::applyFilter($title);
+        $table = DAL::getFormalTableName("pubcontrol_Groups");
+
+        $sql = "SELECT id FROM {$table} WHERE title = '{$title}';";
+        $result = $conn->executeQuery($sql);
+        $row = $result->fetchAssoc();
+
+        if($row === NULL) {
+            return FALSE;
+        }
+        
+        return $row["id"];
+    }
+
+    /**
      * Removes the group from the database
      * Note: This will FAIL if there are still feeds assigned to this group.
      * A group with feeds can NOT be deleted. You must reassign the feeds first.
