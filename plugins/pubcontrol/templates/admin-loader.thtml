@@ -1,0 +1,53 @@
+<table>
+<tr>
+        <td>
+            <a href="index.php"><img src="images/pubcontrol.jpg" alt="[Publication Control]"></a>
+        </td>
+        <td>
+            <h1>{lang_134}</h1>
+        </td>
+</tr>
+</table>
+
+<h1>{lang_145}</h1>
+<br />
+<b>{lang_137}</b>
+<br />{control1}
+<ul>
+<li><a href="{url_1}">{option_1}</a> {lang_138}</li>
+<li><a href="{url_2}">{option_2}</a> {lang_139}</li>
+</ul>
+<br />
+{COMMENT_START}
+<b>{lang_140}</b>
+<ul>
+<li>{num_awaiting}</li>
+</ul>
+<br />
+<b>{lang_147}</b>
+<ul>
+{lili1}
+</ul>
+<br />
+<b>{lang_143}</b>
+<br />
+{lang_144}
+<ul>
+<li><a href="publ.php?cmd=2">{lang_23}</a></li>
+<li><a href="publ.php?cmd=4">{lang_22}</a></li>
+<li><a href="publ.php?cmd=5">{lang_32}</a></li>
+<li><a href="publ.php?cmd=7">{lang_36}</a></li>
+</ul>
+{COMMENT_END}
+<br />
+<h1>{lang_146}</h1>
+<br />
+<b>{lang_143}</b>
+<br />
+{lang_144}
+<ul>
+<li><a href="recv.php?cmd=1">{lang_102}</a></li>
+<li><a href="recv.php?cmd=3">{lang_109}</a></li>
+<li><a href="recv.php?cmd=5">{lang_111}</a></li>
+<li><a href="recv.php?cmd=9">{lang_124}</a></li>
+</ul>

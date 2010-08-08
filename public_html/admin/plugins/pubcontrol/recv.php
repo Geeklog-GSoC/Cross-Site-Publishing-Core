@@ -698,6 +698,16 @@ OUTPUT;
     }
 }
 else {
+    // Redirect to the main loading page
+    if(isset($_GET['msg'])) {
+        header("Location: index.php?msg={$_GET['msg']}");
+    }
+    else {
+       header("Location: index.php");
+    }
+    
+    exit;
+    
      // Load panel
     $temp = new TemplatingLayer($_CONF['path'] . 'plugins/pubcontrol/templates/', 'manager2.thtml');
     $temp->set_var('lang_94', $LANG_PUBCONTROL_UPLUGIN[94]);

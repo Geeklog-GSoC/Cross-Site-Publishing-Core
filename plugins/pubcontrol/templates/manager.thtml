@@ -9,30 +9,30 @@
 <div class="bigload">
     <b>{lang_25}</b>
     <br /><br />
-    <a href="index.php?cmd=2">{lang_23}</a>
-    <br /><a href="index.php?cmd=4">{lang_22}</a>
+    <a href="publ.php?cmd=2">{lang_23}</a>
+    <br /><a href="publ.php?cmd=4">{lang_22}</a>
 
 </div>
 
 <div class="bigload">
     <b>{lang_43}</b>
     <br /><br />
-    <a href="index.php?cmd=5">{lang_32}</a>
-    <br /><a href="index.php?cmd=7">{lang_36}</a>
+    <a href="publ.php?cmd=5">{lang_32}</a>
+    <br /><a href="publ.php?cmd=7">{lang_36}</a>
 </div>
 
 <div class="bigload">
     <b>{lang_50}</b>
     <br /><br />
-    <a href="index.php?cmd=9">{lang_46}</a>
-    <br /><a href="index.php?cmd=10">{lang_49}</a>
+    <a href="publ.php?cmd=9">{lang_46}</a>
+    <br /><a href="publ.php?cmd=10">{lang_49}</a>
 </div>
 
 <div class="bigload">
     <b>{lang_57}</b>
     <br /><br />
-    <a href="index.php?cmd=13">{lang_58}</a>
-    <br /><a href="index.php?cmd=14">{lang_59}</a>
+    <a href="publ.php?cmd=13">{lang_58}</a>
+    <br /><a href="publ.php?cmd=14">{lang_59}</a>
 </div>
 
 <!-- End PubControl Manager -->
