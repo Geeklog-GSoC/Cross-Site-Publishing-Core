@@ -57,6 +57,8 @@ if(isset($_GET['cmd'])) {
 
             // Attempt to add access code 
             if(isset($_GET['s'])) {
+                // Read in the POST characters
+                $dataType = HostInterface::POST("DataType", "");
                 
             }
 
@@ -146,9 +148,9 @@ Welcome to the Access Code registration point
 </select>
 
 <br /><br />
-<div class="smalltxt">Access Code</div>
+<!-- <div class="smalltxt">Access Code</div>
 <input class="long" maxlength="100" disabled="disabled" type="text" name="GEEKLOG_AC" id="GEEKLOG_AC" value="AT" />
-<br /><br />
+<br /><br /> -->
 <div class="smalltxt"></div>
 <input class="pubcontrol" type="submit" name="submit_modify_sgroup" value="Generate and Register Access Code" />
 

@@ -8,6 +8,8 @@
 <br />
 <form name="PubControl_AddGroup" method="post" action="recv.php?cmd=6" enctype="multipart/form-data">
 
+<input type="hidden" name="GEEKLOG_BACKTRACKADDR" value="{hidden_a}" />
+
 <div class="smalltxt" id="GEEKLOG_PUPLOAD_ERRFORM" style="color:red"></div>
 
 <div class="smalltxt">{lang_77}</div>

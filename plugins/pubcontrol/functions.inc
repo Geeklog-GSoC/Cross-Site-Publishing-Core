@@ -389,7 +389,7 @@ function ADMIN_getListField_listrecvcontrol_SubscribersFeeds($fieldname, $fieldv
             $A['summary'] = urlencode($A['summary']);
             $A['title'] = urlencode($A['title']);
             $A['access_code'] = urlencode($A['access_code']);
-            $retval = "<a href='recv.php?cmd=11&sum={$A['summary']}&fid={$A['id']}&gid={$A['group_id']}&t={$A['title']}&r={$A['type']}&s={$A['sub_id']}&a={$A['access_code']}'>{$LANG_PUBCONTROL_UPLUGIN[129]}</a>";
+            $retval = "<a href='recv.php?cmd=11&sum={$A['summary']}&trck={$A['trck']}&fid={$A['id']}&gid={$A['group_id']}&t={$A['title']}&r={$A['type']}&s={$A['sub_id']}&a={$A['access_code']}'>{$LANG_PUBCONTROL_UPLUGIN[129]}</a>";
             break;
         default:
             $retval = $fieldvalue;

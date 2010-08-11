@@ -31,6 +31,34 @@ class ReceivingControlManagement
     }
 
     /**
+     * Checks to see if the subscription exists (URL, private, public)
+     *
+     * @param   String      $url        The URL of the subscription
+     * @param   Integer     $type       The TypeObject value for private or public
+     * @return  Boolean                 Subscription ID if it exists, FALSE if otherwise. Use === to check
+     */
+    public function subscriptionExists($url, $type)
+    {
+        // Declare Variables
+        $table = DAL::getFormalTableName("recvcontrol_Subscriptions");
+        $type = (int)DAL::applyFilter($type, true);
+        $url = DAL::applyFilter($url);
+        $conn = $this->_Conn;
+        
+        // Check if already exists
+        $sql = "SELECT id FROM {$table} WHERE url = '{$url}' AND type = '{$type}';";
+        $result = $conn->executeQuery($sql);
+        $row = $result->fetchAssoc();
+        if($row !== NULL) {
+            return $row['id'];
+        }
+        else {
+            return FALSE;
+        }
+
+    }
+
+    /**
      * Finishes a valid private subscription
      *
      * @param   String      $ssid       The security identifier that has been issued
@@ -46,12 +74,12 @@ class ReceivingControlManagement
         $conn = $this->_Conn;
 
         // Check if already exists
-        $sql = "SELECT type FROM {$table} WHERE ssid = '{$ssid}' AND url = '{$url}' AND type = '1';";
+        /*$sql = "SELECT type FROM {$table} WHERE ssid = '{$ssid}' AND url = '{$url}' AND type = '1';";
         $result = $conn->executeQuery($sql);
         $row = $result->fetchAssoc();
         if($row !== NULL) {
             return FALSE;
-        }
+        }*/
 
         // Create query
         $sql = "INSERT INTO {$table} (ssid, identifier, url, type) VALUES('{$ssid}','','{$url}','1');";
@@ -60,13 +88,15 @@ class ReceivingControlManagement
         return TRUE;
     }
 
+
     /**
      * Finishes a valid public subscription
      *
      * @param   String      $url        The URL that the public repository is listed at
+     * @param   Integer     &$sid       Will hold the security id on insert
      * @return  Boolean                 On success TRUE, false means that it already exists in the DB
      */
-    public function finishPublicSubscription($url)
+    public function finishPublicSubscription($url, &$sid)
     {        
         // Declare Variables
         $table = DAL::getFormalTableName("recvcontrol_Subscriptions");
@@ -74,17 +104,18 @@ class ReceivingControlManagement
         $conn = $this->_Conn;
 
         // Check if already exists
-        $sql = "SELECT type FROM {$table} WHERE url = '{$url}' AND type = '2';";
+        /* $sql = "SELECT id FROM {$table} WHERE url = '{$url}' AND type = '2';";
         $result = $conn->executeQuery($sql);
         $row = $result->fetchAssoc();
         if($row !== NULL) {
+            $sid = $row['id'];
             return FALSE;
-        }
+        }*/
 
         // Create query
         $sql = "INSERT INTO {$table} (ssid, identifier, url, type) VALUES('','','{$url}','2');";
         $conn->executeNonQuery($sql);
-
+        $sid = $conn->getInsertId();
         return TRUE;
     }
 

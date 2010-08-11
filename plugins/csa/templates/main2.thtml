@@ -1,0 +1,19 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+{lang_37}
+<br />
+- <i>{lang_38}</i>
+
+<div class="bigload">
+    <b>{lang_39}</b>
+    <br /><br />
+    <a href="../pubcontrol/recv.php?cmd=5&trck={track}">{lang_40}</a>
+    <br /><br />
+    <a href="../pubcontrol/recv.php?cmd=3&ac={ac}">{lang_41}</a>
+
+</div>
+
+
+<!-- End PubControl Manager -->

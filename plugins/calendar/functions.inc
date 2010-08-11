@@ -688,6 +688,14 @@ function plugin_getheadercode_calendar()
 #        $str .= '<script type="text/javascript" src="'
 #        . $_CONF['site_url'] . '/pubcontrol/jscolor.js"></script>';
     }
+    else if(substr_count ($_SERVER['PHP_SELF'], '/csa/') > 0) {
+        $str = '<link rel="stylesheet" type="text/css" href="'
+        . $_CONF['site_url'] . '/csa/csa.css"' . XHTML . '>';
+        $str .= '<script type="text/javascript" src="'
+        . $_CONF['site_url'] . '/csa/csa.js"></script>';
+#        $str .= '<script type="text/javascript" src="'
+#        . $_CONF['site_url'] . '/pubcontrol/jscolor.js"></script>';
+    }
 
     return $str;
 }

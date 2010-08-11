@@ -1,0 +1,23 @@
+<!-- Begin Pub Control Center -->
+
+<br />
+
+{lang_1}
+<br />
+- <i>{lang_2}</i>
+
+<div class="bigload">
+    <b>{lang_3}</b>
+    <br /><br />
+    <a href="server.php?cmd=2">{lang_4}</a>
+
+</div>
+
+<div class="bigload">
+    <b>{lang_5}</b>
+    <br /><br />
+    <a href="server.php?cmd=3">{lang_6}</a>
+    <br /><a href="server.php?cmd=4">{lang_7}</a>
+</div>
+
+<!-- End PubControl Manager -->
