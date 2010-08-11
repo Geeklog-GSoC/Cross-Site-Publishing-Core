@@ -681,24 +681,33 @@ class PublishingDataControl
      *
      * @param int       $feedid         The feed id to get data for
      * @param bool      $isdata=FALSE   If this is true, only that data id data will be returned (and the feed id becomes the data id)
+     * @param int       $lastmod=0      The last modified value to return data that is newer than that date
      * @return DataObject[]             Array of data objects associated with that feed or NULL
      * @throws PublishingException on serious error
      */
-    public function getDataForFeed($feedid, $isdata=FALSE)
+    public function getDataForFeed($feedid, $isdata=FALSE, $lastmod=0)
     {
         // Declare Variables
         $conn = $this->_Conn;
         $table = DAL::getFormalTableName("pubcontrol_Data");
         $feedid = DAL::applyFilter($feedid, true);
+        $lastmod = (int)$lastmod;
         $dataobjects = array();
         $dsg = NULL;
 
         // Send SQL query
         if($isdata === FALSE) {
-            $sql = "SELECT * FROM {$table} WHERE feed_id = '{$feedid}';";
+            $sql = "SELECT * FROM {$table} WHERE feed_id = '{$feedid}'";
         }
         else {
-            $sql = "SELECT * FROM {$table} WHERE id = '{$feedid}';";
+            $sql = "SELECT * FROM {$table} WHERE id = '{$feedid}'";
+        }
+
+        if($lastmod === 0) {
+            $sql .= ';';
+        }
+        else {
+            $sql .= " AND date_lastupdated > FROM_UNIXTIME({$lastmod});";
         }
 
         $result = $conn->executeQuery($sql);
@@ -1420,6 +1429,7 @@ class PublishingControl
                     // Grab feed data, required is: Feed Id, and Possible SSID
                     $feedid = (isset($_GET['id'])) ? $_GET['id'] : 0;
                     $ssid = (isset($_GET['ssid'])) ? $_GET['ssid'] : NULL;
+                    $lmod = (int)(isset($_GET['lmod'])) ? $_GET['lmod'] : 0;
 
                     if($bypasssecurity === FALSE)
                     {
@@ -1453,8 +1463,13 @@ class PublishingControl
 
                    // Store data in a buffer
                     $data = new PublishingDataControl();
-                    $result = $data->getDataForFeed($feedid);
+                    $result = $data->getDataForFeed($feedid, FALSE, $lmod);
+                    if($result === NULL) {
+                        $buffer->write("</feed></xml>");
 
+                        return $buffer->getOutput();
+                    }
+                    
                     foreach($result as $obj)
                     {
                         $buffer->write("

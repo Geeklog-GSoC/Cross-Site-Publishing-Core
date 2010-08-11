@@ -124,3 +124,11 @@ Wed Aug  4 15:22:37 2010 - 1052: Column 'type' in field list is ambiguous. SQL i
 Wed Aug  4 15:49:04 2010 - 1064: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '', 'Feed Error','sahzsdh','2', 'ATTG00000A', NOW(), '3')' at line 2. SQL in question: INSERT INTO glcore_recvcontrol_Feeds (feed_id, group_id, title, summary, type, access_code, last_modified, subscription_id)
                 VALUES('2', 1', 'Feed Error','sahzsdh','2', 'ATTG00000A', NOW(), '3'); 
 Wed Aug  4 16:14:06 2010 - 1054: Unknown column 'last_modifed' in 'field list'. SQL in question: UPDATE glcore_recvcontrol_Feeds SET last_modifed = '2010-08-04 16:05:16'; 
+Wed Aug 11 12:55:19 2010 - 2 - Invalid argument supplied for foreach() @ /var/www/gsoc/gsoc-2010-tpatrick/plugins/pubcontrol/lib/pub/PublishingControl.php line 1458 
+Wed Aug 11 12:55:47 2010 - 2 - Invalid argument supplied for foreach() @ /var/www/gsoc/gsoc-2010-tpatrick/plugins/pubcontrol/lib/pub/PublishingControl.php line 1458 
+Wed Aug 11 12:56:05 2010 - 2 - Invalid argument supplied for foreach() @ /var/www/gsoc/gsoc-2010-tpatrick/plugins/pubcontrol/lib/pub/PublishingControl.php line 1458 
+Wed Aug 11 14:14:13 2010 - 1054: Unknown column 'last_modified' in 'where clause'. SQL in question: SELECT * FROM glcore_pubcontrol_Data WHERE feed_id = '7' AND last_modified > FROM_UNIXTIME(1281548585); 
+Wed Aug 11 14:14:13 2010 - 256 - An SQL error has occurred. Please see error.log for details. @ /var/www/gsoc/gsoc-2010-tpatrick/system/databases/mysql.class.php line 260 
+Wed Aug 11 14:14:39 2010 - 1054: Unknown column 'last_modified' in 'where clause'. SQL in question: SELECT * FROM glcore_pubcontrol_Data WHERE feed_id = '7' AND last_modified > FROM_UNIXTIME(1281548585); 
+Wed Aug 11 14:14:39 2010 - 256 - An SQL error has occurred. Please see error.log for details. @ /var/www/gsoc/gsoc-2010-tpatrick/system/databases/mysql.class.php line 260 
+Wed Aug 11 14:14:48 2010 - 1054: Unknown column 'last_modified' in 'where clause'. SQL in question: SELECT * FROM glcore_pubcontrol_Data WHERE feed_id = '7' AND last_modified > FROM_UNIXTIME(1281548585); 

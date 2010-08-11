@@ -31,6 +31,42 @@ class ReceivingControlManagement
     }
 
     /**
+     * Add an access code handling class
+     * NOTE: It MUST implement the ReceivingDataInterface to be accepted
+     *
+     * @param   String          The class name [ Should be in format: PluginName_Publishing_AccessCode ]
+     * @param   String          Access Code to register for
+     * @param   String          The plugins pl name
+     * @return  Boolean         True on success, False on failure
+     * 
+     */
+    public function addAccessCodeHandler($class, $accessCode, $plname)
+    {
+        // Check to see if it implemented the interface
+        if((class_exists($class) === FALSE) || ($accessCode === '')){
+            return false;
+        }
+
+        // Make sure it is an instance of
+        $p = new $class();
+        if(!($p instanceof  ReceivingDataInterface)) {
+            return false;
+        }
+
+        // Add the handler
+        $table = DAL::getFormalTableName("recvcontrol_Handlers");
+        $accessCode = DAL::applyFilter($accessCode);
+        $plname = DAL::applyFilter($plname);
+        $class = DAL::applyFilter($class);
+        $conn = $this->_Conn;
+
+        $conn->executeNonQuery("INSERT INTO {$table}(cname, access_code, plugin_name) VALUES('{$class}', '{$accessCode}', '{$plname}');");
+
+        return true;
+    }
+
+
+    /**
      * Checks to see if the subscription exists (URL, private, public)
      *
      * @param   String      $url        The URL of the subscription
@@ -175,7 +211,7 @@ class ReceivingControlManagement
         $table = DAL::getFormalTableName("recvcontrol_Feeds");
 
         $sql = "INSERT INTO {$table} (feed_id, group_id, title, summary, type, access_code, last_modified, subscription_id)
-                VALUES('{$feedobject->_Id}', '{$feedobject->_GroupId}', '{$feedobject->_Title}','{$feedobject->_Summary}','{$feedobject->_Type}', '{$feedobject->_AccessCode}', NOW(), '{$sid}');";
+                VALUES('{$feedobject->_Id}', '{$feedobject->_GroupId}', '{$feedobject->_Title}','{$feedobject->_Summary}','{$feedobject->_Type}', '{$feedobject->_AccessCode}', FROM_UNIXTIME(0), '{$sid}');";
 
         // Send out the query
         $conn->executeNonQuery($sql);
@@ -307,16 +343,17 @@ class ReceivingControlManagement
      * @param   String       $url       The url to extract from
      * @param   Integer      $feedid    The feed id
      * @param   String       $ssid=""   The SSID
+     * @param   Integer      $lastmod=0 The last modified date (as a UNIXTIME stamp), to only load data that is later than that date
      * @return  Array[2]                An array of data -> [0] -> FeedObject with title, access_code, group_id, feed_id set, [1] -> DataObject[] Array of data objects
      *
      */
-    public static function collectFeedData($url, $feedid, $ssid="")
+    public static function collectFeedData($url, $feedid, $ssid="", $lastmod=0)
     {
         // Read in the DATA data from the URL
         // Eg. Read the atom object
         $atom = new AtomReader();
         try {
-            $atom->loadFile($url . "/pubcontrol/index.php?cmd=109&id={$feedid}&ssid={$ssid}");
+            $atom->loadFile($url . "/pubcontrol/index.php?cmd=109&id={$feedid}&ssid={$ssid}&lmod={$lastmod}");
         }
         catch (Exception $d) {
             // Error
@@ -376,11 +413,13 @@ class ReceivingControlManagement
         $dataobjects = array();
         $dsg = NULL;
         $accesskey = DAL::applyFilter($accesskey);
+        $table = DAL::getFormalTableName("recvcontrol_Feeds");
+        $table2 = DAL::getFormalTableName("recvcontrol_Data");
         $lastmod = DAL::applyFilter($lastmod, TRUE);
 
         // Get a list of all content
-        $result = $conn->executeQuery("FAIL();");
-
+        $qstr = "SELECT {$table2}.id, {$table2}.feed_id, {$table2}.title, {$table2}.content, {$table2}.date_created, {$table2}.date_lastupdated, {$table2}.authors, {$table2}.contributors FROM {$table}, {$table2} WHERE {$table}.access_code = '{$accesskey}' AND {$table2}.feed_id = {$table}.feed_id ORDER BY {$table2}.date_lastupdated DESC;";
+        $result = $conn->executeQuery($qstr);
         // Loop over the result and return the data
         while( ($row = $result->fetchAssoc()) !== NULL)
         {
@@ -469,29 +508,62 @@ class ReceivingControlManagement
 
         }
 
+        // Grab the handlers
+        $handler_array = Array();
+        $table = DAL::getFormalTableName("recvcontrol_Handlers");
+        $result = $conn->executeQuery("SELECT * FROM {$table};");
+
+        while( ($row = $result->fetchAssoc()) !== NULL)
+        {
+            if(class_exists($row['cname'])) {
+                $handler_array[] = Array($row['access_code'], $row['cname']);
+            }
+        }
+
+        // Call the before functions
+        foreach($handler_array as $handle) {
+            @$handle[1]::beforeScrape();
+        }
+
         // Now we have the data, lets do a full scrape for each URL
         // Has it modified yet
         foreach($array as $value)
         {
             // Is it new data
             if(AtomReader::isNewData($value['url'] . "/pubcontrol/index.php?cmd=109&id={$value['feed_id']}&ssid={$value['ssid']}", $value['last_modified']) === 0) {
-                $DataObjects = $this->collectFeedData($value['url'], $value['feed_id'], $value['ssid']);
+                $DataObjects = $this->collectFeedData($value['url'], $value['feed_id'], $value['ssid'], $value['last_modified']);
+                $feedData1 = $DataObjects[0];
                 $DataObjects = $DataObjects[1];
                 $oldest = 0;
-                
+
+                $arrayOfNormalHandles = Array();
+                foreach($handler_array as $handle) {
+                    if($handle[0] == $feedData1->_AccessCode) {
+                        $arrayOfNormalHandles[] = $handle[1];
+                    }
+                }
+
                 // Now loop through and only get ones with last_modified > than the original
+                $bbupdate = false;
                 foreach($DataObjects as $obj)
                 {
                     // Older?
                     $b = strtotime($obj->_DateLastUpdated);
-                    if($b < $value['last_modified']) {
+                    if($b <= $value['last_modified']) {
                         // Since it is always oldest last, then once one last-modified is reached, they all are old
-                        break;
+                        continue;
                     }
 
                     if($b > $oldest) {
                         $oldest = $b;
                     }
+
+                    // Send to the function
+                    foreach($arrayOfNormalHandles as $drr) {
+                        @$drr::processData($obj);
+                    }
+
+                    $bbupdate = true;
 
                     // Insert the data into the database
                     $title = DAL::applyFilter($obj->_Title);
@@ -506,17 +578,48 @@ class ReceivingControlManagement
                 }
 
                 // Update feed
-                $dt = date("Y-m-d H:i:s", $oldest);
-                $table2 = DAL::getFormalTableName("recvcontrol_Feeds");
-                $conn->executeNonQuery("UPDATE {$table2} SET last_modified = '{$dt}';");
+                if($bbupdate == TRUE) {
+                    $dt = date("Y-m-d H:i:s", $oldest);
+                    $table2 = DAL::getFormalTableName("recvcontrol_Feeds");
+                    $conn->executeNonQuery("UPDATE {$table2} SET last_modified = '{$dt}';");
+                }
                 
             }
         }
+
+        // Call the before functions
+        foreach($handler_array as $handle) {
+            @$handle[1]::afterScrape();
+        }
+
         
     }
 
 }
 
+/**
+ * This interface is to be implemented by the plugins that wish to add handlers for incoming data
+ */
+interface ReceivingDataInterface
+{
+    /**
+     * This method is called before a scrape is performed
+     */
+    public static function beforeScrape();
 
+    /**
+     * This method is called after a scrape is performed
+     */
+    public static function afterScrape();
+
+    /**
+     * This method is called when a read in data object matches a given access code
+     * The data object is also copied to the data table
+     *
+     * @param DataObject    $DataObject     The data object read in
+     */
+    public static function processData($DataObject);
+
+}
 
 ?>

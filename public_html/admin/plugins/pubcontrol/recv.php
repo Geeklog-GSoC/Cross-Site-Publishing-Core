@@ -612,14 +612,13 @@ OUTPUT;
 
        # This is a funny test
        case 1000:
-           echo "This is a test<br />";
+#           echo "This is a test<br />";
 
            $r = new ReceivingControlManagement();
-           echo '<pre>';
            $r->doDataScrape();
 #           $t = $r->collectFeedData("http://localhost/gsoc/gsoc-2010-tpatrick/public_html/pubcontrol/", 2);
            #var_dump($t);
-           echo '</pre>';
+           $display .= "TEST -- MANUAL SCRAPE OF DATA (Will be performed by a g-cron job)";
            break;
 
 
