@@ -54,6 +54,7 @@ $_TABLES['recvcontrol_Feeds'] = $_DB_table_prefix . 'recvcontrol_Feeds';
 $_TABLES['recvcontrol_Data'] = $_DB_table_prefix . 'recvcontrol_Data';
 $_TABLES['recvcontrol_Subscriptions'] = $_DB_table_prefix . 'recvcontrol_Subscriptions';
 $_TABLES['pubcontrol_Accesscodes'] = $_DB_table_prefix . 'pubcontrol_Accesscodes';
+$_TABLES['recvcontrol_Handlers'] = $_DB_table_prefix . 'recvcontrol_Handlers';
 
 
 $plugin_path = $_CONF['path'] . 'plugins/pubcontrol/';

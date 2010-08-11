@@ -282,7 +282,6 @@ class AtomReader
     public static function isNewData($url, $olddate)
     {
         // Grab the headers from the url
-        echo $url; exit;
         $headers = get_headers($url . '&fmt=headers', 1);
 
         if($headers === FALSE) {
