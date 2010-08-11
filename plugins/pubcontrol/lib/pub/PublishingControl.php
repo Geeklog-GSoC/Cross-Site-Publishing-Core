@@ -4,7 +4,7 @@
  * @author Tim Patrick
  * @license GPL V3
  * @copyright 2010 Tim Patrick
- * @version 0.1
+ * @version 0.2
  *
  */
 
@@ -33,11 +33,12 @@ class PublishingGroupControl
     /**
      * Creates a group in the publishing database
      *
-     * @param GroupObject $groupobject A group object filled with the data
+     * @param GroupObject       $groupobject        A group object filled with the data
+     * @param Boolean           $nodisplay=FALSE    If set to true, then the group will be set to no display which means it will not be shown to the user to delete or edit - This is for plugin use
      * @return int                      The insertion id
      * @throws PublishingException on failure to create
      */
-    public function createGroup($groupobject)
+    public function createGroup($groupobject, $nodisplay=FALSE)
     {
         // Declare Variables
         $conn = new DAL();
@@ -55,7 +56,20 @@ class PublishingGroupControl
         $groupobject->_Summary = DAL::applyFilter($groupobject->_Summary);
         $groupobject->_Type = DAL::applyFilter($groupobject->_Type, true);
 
-        $sql = "INSERT INTO {$table} (title, summary, type) VALUES('{$groupobject->_Title}','{$groupobject->_Summary}','{$groupobject->_Type}');";
+        // Get the NODISPLAY value
+        if($nodisplay === FALSE) {
+            $nodisplay = 'N';
+        }
+        else {
+            $nodisplay = 'Y';
+        }
+
+        // Do a test to make sure the % symbol is only there if nodisplay is Y
+        if( (strpos($groupobject->_Title, "%") !== FALSE) && ($nodisplay === 'N')){
+            throw new PublishingException("% Special Character can only be used with No Display flag set to TRUE");
+        }
+
+        $sql = "INSERT INTO {$table} (title, summary, type, nodisplay) VALUES('{$groupobject->_Title}','{$groupobject->_Summary}','{$groupobject->_Type}', '{$nodisplay}');";
         
         // Send out the query
         $conn->executeNonQuery($sql);
@@ -105,6 +119,11 @@ class PublishingGroupControl
         $conn = new DAL();
         $table = DAL::getFormalTableName("pubcontrol_Groups");
         
+        // Do a test to make sure the % symbol is only there if nodisplay is Y
+        if( (strpos($groupobject->_Title, "%") !== FALSE)){
+            throw new PublishingException("% Special Character can only be used with No Display flag set to TRUE");
+        }
+
         // Check which items are added
         if($groupobject->_Title !== NULL)
         {
@@ -144,6 +163,7 @@ class PublishingGroupControl
 
     /**
      * Returns a GroupObject object with the group data in it that matches the specific group id
+     * NOTE: NoDisplay groups are NOT returned.
      *
      * @param   int     $groupid        The group id
      * @return                          GroupObject or NULL
@@ -164,6 +184,10 @@ class PublishingGroupControl
                 // Now attempt to loop over and populate objects
         while ( ($row = $result->fetchAssoc()) !== NULL)
         {
+            if($row['nodisplay'] == 'Y') {
+#                continue;
+            }
+            
             $grp = new GroupObject();
             $grp->_Id = $row['id'];
             $grp->_Title = $row['title'];
@@ -225,6 +249,10 @@ class PublishingGroupControl
         // Now attempt to loop over and populate objects
         while ( ($row = $result->fetchAssoc()) !== NULL)
         {
+            if($row['nodisplay'] == 'Y') {
+#                continue;
+            }
+
             $grp = new GroupObject();
             $grp->_Id = $row['id'];
             $grp->_Title = $row['title'];
@@ -515,6 +543,36 @@ class PublishingDataControl
         $conn->executeNonQuery("UPDATE {$table} SET last_modified = NOW() WHERE id = '{$feedid}';");
     }
 
+    /**
+     * Updates the old tables last modified entry if the data has changed to a new feed
+     * - Checks to see if the feed id has changed - if it has, then get the new feed and update the old last modified one
+     * NOTE: MUST BE CALLED BEFORE THE UPDATE DATA CALL
+     *
+     * @param   Integer     $feedid     The feed id
+     * @param   Integer     $dataid     The data id
+     *
+     */
+    private function _updateLastModifiedOldObject($feedid, $dataid)
+    {
+        // Get the feed id
+        $conn = $this->_Conn;
+        $table = DAL::getFormalTableName("pubcontrol_Data");
+        $dataid = (int)DAL::applyFilter($dataid, true);
+
+        // Send query
+        $result = $conn->executeQuery("SELECT feed_id FROM {$table} WHERE id = '{$dataid}';");
+        $row = $result->fetchAssoc();
+
+        if($row['feed_id'] == $feedid) {
+            // has not changed
+            return;
+        }
+        else {
+            // Has changed
+            $this->_updateLastModified($row['feed_id']);
+        }
+    }
+
     public function __construct()
     {
         $this->_Conn = new DAL();
@@ -562,7 +620,7 @@ class PublishingDataControl
         $sql = "INSERT INTO {$table} (feed_id, title, content, date_created, date_lastupdated, authors, contributors)
                 VALUES
                 ('{$DataObject->_FeedId}', '{$DataObject->_Title}', '{$DataObject->_Content}',
-                '{$DataObject->_DateCreated}', '{$DataObject->_DateLastUpdated}', '{$authors}', '{$cont}');";
+                NOW(), NOW(), '{$authors}', '{$cont}');";
         $conn->executeNonQuery($sql);
         $this->_updateLastModified($DataObject->_FeedId);
         return $conn->getInsertId();
@@ -593,7 +651,8 @@ class PublishingDataControl
 
         // And now make the query
         $sql = "UPDATE {$table} SET feed_id = '{$DataObject->_FeedId}', title = '{$DataObject->_Title}', content = '{$DataObject->_Content}',
-                date_created = '{$DataObject->_DateCreated}', date_lastupdated = '{$DataObject->_DateLastUpdated}', authors = '{$authors}', contributors = '{$cont}' WHERE id = '{$dataid}';";
+                date_lastupdated = NOW(), authors = '{$authors}', contributors = '{$cont}' WHERE id = '{$dataid}';";
+        $this->_updateLastModifiedOldObject($DataObject->_FeedId, $dataid);
         $conn->executeNonQuery($sql);
         $this->_updateLastModified($DataObject->_FeedId);
     }
@@ -620,11 +679,12 @@ class PublishingDataControl
     /**
      * Gets all the data objects for a specific feed.
      *
-     * @param int $feedid The feed id to get data for
-     * @return DataObject[] Array of data objects associated with that feed
+     * @param int       $feedid         The feed id to get data for
+     * @param bool      $isdata=FALSE   If this is true, only that data id data will be returned (and the feed id becomes the data id)
+     * @return DataObject[]             Array of data objects associated with that feed or NULL
      * @throws PublishingException on serious error
      */
-    public function getDataForFeed($feedid)
+    public function getDataForFeed($feedid, $isdata=FALSE)
     {
         // Declare Variables
         $conn = $this->_Conn;
@@ -634,7 +694,13 @@ class PublishingDataControl
         $dsg = NULL;
 
         // Send SQL query
-        $sql = "SELECT * FROM {$table} WHERE feed_id = '{$feedid}';";
+        if($isdata === FALSE) {
+            $sql = "SELECT * FROM {$table} WHERE feed_id = '{$feedid}';";
+        }
+        else {
+            $sql = "SELECT * FROM {$table} WHERE id = '{$feedid}';";
+        }
+
         $result = $conn->executeQuery($sql);
 
         // And loop over the result
@@ -653,7 +719,7 @@ class PublishingDataControl
         }
         
 
-        return $dataobjects;
+        return (count($dataobjects) === 0) ? NULL : $dataobjects;
     }
 }
 
@@ -1839,13 +1905,13 @@ class DataObject
      * An array of authors (full names)
      * @var String[]
      */
-    public $_Authors = NULL;
+    public $_Authors = Array();
 
     /**
      * An array of contributors (full names)
      * @var String[]
      */
-    public $_Contributors = NULL;
+    public $_Contributors = Array();
 
 
     /**
@@ -1858,8 +1924,6 @@ class DataObject
     {
         if( ($this->_Content === NULL) || ($this->_Content === "")
                 || ($this->_Title === NULL) || ($this->_Title === "")
-                || ( $this->_DateCreated === NULL) || ( $this->_DateCreated === "")
-                || ( $this->_DateLastUpdated === NULL) || ( $this->_DateLastUpdated === "")
                 || ( $this->_FeedId === NULL) || ( $this->_FeedId === ""))
         {
             return false;

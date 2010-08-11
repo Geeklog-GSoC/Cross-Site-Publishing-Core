@@ -185,7 +185,7 @@ if(isset($_GET['cmd'])) {
 
             $query_arr = array(
                 'table' => 'pubcontrol_Groups',
-                'sql' => $qstr . " WHERE 1=1",
+                'sql' => $qstr . " WHERE nodisplay = 'N'",
                 'query_fields' => array('title'),
                 'default_filter' => ''
             );
@@ -910,7 +910,8 @@ else if(isset($_GET['ret']))
                 }
             }
             catch(PublishingException $pe) {
-                header("Location: index.php?msg=3");
+                header("Location: index.php?cmd=4&msg=2");
+                exit;
             }
 
             header("Location: index.php?cmd=4&msg=4");

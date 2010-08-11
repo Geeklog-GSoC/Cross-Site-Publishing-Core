@@ -9,9 +9,19 @@
 <webMaster>admin@localhost</webMaster>
 <copyright>Copyright 2010 Geeklog Site</copyright>
 <generator>Geeklog</generator>
-<pubDate>Mon, 14 Jun 2010 12:02:34 -0400</pubDate>
+<pubDate>Tue, 10 Aug 2010 13:56:06 -0400</pubDate>
 <language>en-gb</language>
 <atom:link href="http://localhost/gsoc/gsoc-2010-tpatrick/public_html/backend/geeklog.rss" rel="self" type="application/rss+xml" />
+<item>
+<title>Foo Foo Foo</title>
+<link>http://localhost/gsoc/gsoc-2010-tpatrick/public_html/article.php?story=20100810135533731</link>
+<guid isPermaLink="true">http://localhost/gsoc/gsoc-2010-tpatrick/public_html/article.php?story=20100810135533731</guid>
+<pubDate>Tue, 10 Aug 2010 13:55:33 -0400</pubDate>
+<comments>http://localhost/gsoc/gsoc-2010-tpatrick/public_html/article.php?story=20100810135533731#comments</comments>
+<dc:subject>Geeklog</dc:subject>
+<description>This is an important ALERT from hub (IG ...</description>
+<trackback:ping>http://localhost/gsoc/gsoc-2010-tpatrick/public_html/trackback.php?id=20100810135533731</trackback:ping>
+</item>
 <item>
 <title>Welcome to Geeklog!</title>
 <link>http://localhost/gsoc/gsoc-2010-tpatrick/public_html/article.php?story=welcome</link>

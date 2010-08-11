@@ -146,15 +146,18 @@ if(isset($_GET['cmd'])) {
        case 3:
            // Grab id data
            $id = (int)HostInterface::GET('id', 0);
+           $ac =  DAL::applyFilter(HostInterface::GET('ac', ''));
 
             $table = DAL::getFormalTableName("recvcontrol_Feeds");
             $table2 = DAL::getFormalTableName("recvcontrol_Subscriptions");
             
+            $ac = $ac === '' ? "" :  " AND {$table}.access_code = '{$ac}'";
+
             if($id === 0) {
-                $qstr = "SELECT {$table}.id, title, summary, url, {$table2}.type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id";
+                $qstr = "SELECT {$table}.id, title, summary, url, {$table2}.type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id {$ac}";
             }
             else {
-                $qstr = "SELECT {$table}.id, title, summary, url, {$table2}.type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id AND {$table}.subscription_id = '{$id}'";
+                $qstr = "SELECT {$table}.id, title, summary, url, {$table2}.type, {$table}.subscription_id FROM {$table},{$table2} WHERE {$table}.subscription_id = {$table2}.id AND {$table}.subscription_id = '{$id}' {$ac}";
             }
 
             $retval = '';
@@ -226,6 +229,9 @@ if(isset($_GET['cmd'])) {
        case 5:
            // Show the user the form data to load the URL
             $temp = new TemplatingLayer($_CONF['path'] . 'plugins/pubcontrol/templates/', 'subscribe2.thtml');
+            $a = HostInterface::GET("trck", '');
+            
+            $temp->set_var('hidden_a', $a);
             $temp->set_var('lang_5', $LANG_PUBCONTROL_UPLUGIN[103] . $LANG_PUBCONTROL_UPLUGIN[112]);
             $temp->set_var('lang_81', $LANG_PUBCONTROL_UPLUGIN[113]);
             $temp->set_var('lang_77', $LANG_PUBCONTROL_UPLUGIN[114]);
@@ -241,12 +247,15 @@ if(isset($_GET['cmd'])) {
            // Grab data being sent in
            $url = HostInterface::POST("GEEKLOG_URL", '');
            $type = (int)HostInterface::POST("GEEKLOG_PUBGTYPE", 0);
+           $track = HostInterface::POST("GEEKLOG_BACKTRACKADDR");
+           $xx = urlencode($url);
+           
            $components = parse_url($url);
 #           $url = urlencode($url);
 
            // Make sure the data is valid
            if( ($url === '') || ( ($type !== 1) && ($type !== 2)) || ($components['scheme'] != 'http')) {
-               header("Location: recv.php?msg=116");
+               header("Location: recv.php?msg=116&cmd=5");
                exit;
            }
 
@@ -254,7 +263,7 @@ if(isset($_GET['cmd'])) {
            $value = @file_get_contents($url . '/pubcontrol/scvalidate.php');
            
            if($value === FALSE) {
-               header("Location: recv.php?msg=116");
+               header("Location: recv.php?msg=116&cmd=5");
                exit;
            }
            
@@ -262,11 +271,25 @@ if(isset($_GET['cmd'])) {
            $value = (int)$value;
 
            if($value === 0) {
-               header("Location: recv.php?msg=116");
+               header("Location: recv.php?msg=116&cmd=5");
                exit;
            }
 
            // Get supported types
+           // Check to see if the subscription exists
+           $r = new ReceivingControlManagement();
+           $sid = $r->subscriptionExists($url, ($type === TypeObject::O_PRIVATE) ? TypeObject::O_PRIVATE : TypeObject::O_PUBLIC);
+           
+           if($sid !== FALSE) {
+               // Already exists
+               if($track == '') {
+                   header("Location: recv.php?msg=100");
+               }
+               else {
+                   header("Location: {$track}&sid={$sid}&url={$xx}&type={$type}");
+               }
+               exit;
+           }
 
            // Is it private or public
            if($type === 1) {
@@ -274,7 +297,7 @@ if(isset($_GET['cmd'])) {
                // Redirect User to the Appropriate Site ()
                if( ($value & 0x04) !== 0x04) {
                    // Private not supported
-                   header("Location: recv.php?msg=117");
+                   header("Location: recv.php?msg=117&cmd=5");
                    exit;
                }
 
@@ -289,22 +312,19 @@ OUTPUT;
            else {
                if( ($value & 0x02) !== 0x02) {
                    // Public not supported
-                   header("Location: recv.php?msg=118");
+                   header("Location: recv.php?msg=118&cmd=5");
                    exit;
                }
 
                // Automatically Register them
-               $r = new ReceivingControlManagement();
-               if($r->finishPublicSubscription($url) === FALSE) {
-                   // Already subscribed
-                   header("Location: recv.php?msg=100");
-                   exit;
-               }
-               else {
-                   // Already subscribed
+               $r->finishPublicSubscription($url, $sids);
+               // Already subscribed
+               if($track == '') {
                    header("Location: recv.php?msg=99");
                }
-               
+               else {
+                   header("Location: {$track}&sid={$sid}&url={$xx}");
+               }
            }
            
            break;
@@ -470,6 +490,7 @@ OUTPUT;
             $title = DAL::applyFilter(HostInterface::GET('t', ''));
             $r = (int)DAL::applyFilter(HostInterface::GET('r', 0));
             $s = (int)DAL::applyFilter(HostInterface::GET('s', 0));
+            $trck = HostInterface::GET('trck', '');
 
             $retval = '';
             $header_arr = array( # display 'text' and use table field 'field'
@@ -531,7 +552,8 @@ OUTPUT;
                     'id' => $obj->_Id,
                     'group_id' => $obj->_GroupId,
                     'access_code' => $obj->_AccessCode,
-                    'sub_id' => $s
+                    'sub_id' => $s,
+                    'trck' => $trck
                 );
 
                 $data_arr[] = $arr;
@@ -558,6 +580,7 @@ OUTPUT;
            $sid = (int)DAL::applyFilter(HostInterface::GET('s', 0));
            $access = DAL::applyFilter(HostInterface::GET('a', ''));
            $id =  (int)DAL::applyFilter(HostInterface::GET('fid', 0));
+           $trck = DAL::applyFilter(HostInterface::GET('trck', ''));
 
            // Make sure it is valid
            if( ($summary === '') || ($gid === 0) || ($title === '') || ($type === 0) || ($sid === 0) || ($access === '') || ($id === 0)) {
@@ -577,7 +600,13 @@ OUTPUT;
            $re = new ReceivingControlManagement();
            $re->addFeed($feed, $sid);
 
-           header("Location: recv.php?msg=132");
+           if($trck === '') {
+               header("Location: recv.php?msg=132");
+           }
+           else {
+               $trck = base64_decode($trck);
+               header("Location: {$trck}");
+           }
 
            break;
 
